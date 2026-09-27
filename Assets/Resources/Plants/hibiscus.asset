@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: hibiscus
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: hibiscus
+  displayName: "\u0413\u0456\u0431\u0456\u0441\u043A\u0443\u0441"
+  growTimeSeconds: 28800
+  waterDepleteSeconds: 7200
+  sprite25: {fileID: 3286163911610860551, guid: 341451ec9eff4b2b8b3efa92c491b277, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 236ecf0581d94073ad272679885bca32, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 5fc8cd3ad950481db8fe458c5cb3cf7b, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: a490869fc3344ba994aadf00bfd8534f, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 0bb8f95ded4d4914aed9f49f2d9faf54, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 1a5c71dd2f5044a391574db2c2f3504e, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: f7b65303967c458cb6357b4c02bb5906, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: dde94079706b46e7a4f996c748754903, type: 3}
+  rarity: 2
+  seedCost: 160
+  sellPrice: 216
+  xpReward: 125
+  unlockLevel: 13
+  tint: {r: 1, g: 1, b: 1, a: 1}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: strelitzia
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: strelitzia
+  displayName: "\u0421\u0442\u0440\u0435\u043B\u0456\u0446\u0456\u044F"
+  growTimeSeconds: 57600
+  waterDepleteSeconds: 14400
+  sprite25: {fileID: 3286163911610860551, guid: 6f6fe6cf2b7f46bbaabed12c872fcdba, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: addf888427c245019cea274befc0623a, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 53017314af9d472b91bea357c4a5ab68, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 207e659a952944aea487430714a29a7d, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 3fe9be6b155d47eeb882d918aa6055d1, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 9efb47210b8a4f9792896f4ecfb2aed9, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 53d8553084d5423c8796d6d56539131d, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: a3c2057f1cbc4c0eb5ad92a19ca57cc7, type: 3}
+  rarity: 3
+  seedCost: 270
+  sellPrice: 354
+  xpReward: 185
+  unlockLevel: 17
+  tint: {r: 1, g: 1, b: 1, a: 1}

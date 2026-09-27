@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: fiddle_leaf_fig
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: fiddle_leaf_fig
+  displayName: "\u0424\u0456\u043A\u0443\u0441 \u043B\u0456\u0440\u043E\u0432\u0438\u0434\u043D\u0438\u0439"
+  growTimeSeconds: 43200
+  waterDepleteSeconds: 10800
+  sprite25: {fileID: 3286163911610860551, guid: 90f12a13b8294b29a20b92578c152533, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: bc5f5a1279444c568cc17a8947ac7384, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 5da02d20988b4870b1793c67c7c808e8, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 7f3c0a7e2e164289a6bdde41edd75ec8, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 44fab9d837754597b896fb901ea60b8c, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 10dd0e1c7c6b4550ac50a77cd2efca90, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 2e8646b55e334ca79886fbd05d9ed248, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: 216db4a5e0dd490ebc661947481262b1, type: 3}
+  rarity: 2
+  seedCost: 210
+  sellPrice: 280
+  xpReward: 155
+  unlockLevel: 15
+  tint: {r: 1, g: 1, b: 1, a: 1}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: calathea
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: calathea
+  displayName: "\u041A\u0430\u043B\u0430\u0442\u0435\u044F"
+  growTimeSeconds: 14400
+  waterDepleteSeconds: 3600
+  sprite25: {fileID: 3286163911610860551, guid: fe09fb02a0a44217b1e3ba1e2cbaa69d, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 87767d416db24fa58fbea5d993636e5e, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: c89abf1ac8244c55b828a5c6911473f5, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: af60c6a03ffd4dfebf91d965bc4abbe5, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 49472acfd2164a51bccb837ca42a9a4d, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 1bceb852bb01436495546c8fe0bd7d71, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 4894516b381542efac60743fe4da825c, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: 8b9ca568b1684c46b622a345355e51f7, type: 3}
+  rarity: 1
+  seedCost: 95
+  sellPrice: 132
+  xpReward: 82
+  unlockLevel: 9
+  tint: {r: 1, g: 1, b: 1, a: 1}

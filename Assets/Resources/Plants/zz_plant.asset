@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: zz_plant
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: zz_plant
+  displayName: "\u0417\u0430\u043C\u0456\u043E\u043A\u0443\u043B\u044C\u043A\u0430\u0441"
+  growTimeSeconds: 3600
+  waterDepleteSeconds: 900
+  sprite25: {fileID: 3286163911610860551, guid: 0572167f42a341db945993470187850e, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: cc4a8f2cc6f44fbb839fd489866fdcd7, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: a2b0de42705f444bac724dd17b34a93e, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 83b5c25e660848a8a3173f1c9ee052cf, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 3b508b39f6c34f87ae8e8b5a970a30ec, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: aeab2ca058764d0cbdc794c83948baaa, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: a2b1b732f542410b9bf848b8dc41efd5, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: d6e2abe503124d899b621dbadd773faf, type: 3}
+  rarity: 0
+  seedCost: 40
+  sellPrice: 58
+  xpReward: 36
+  unlockLevel: 4
+  tint: {r: 1, g: 1, b: 1, a: 1}

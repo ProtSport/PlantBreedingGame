@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: spider_plant
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: spider_plant
+  displayName: "\u0425\u043B\u043E\u0440\u043E\u0444\u0456\u0442\u0443\u043C"
+  growTimeSeconds: 1800
+  waterDepleteSeconds: 450
+  sprite25: {fileID: 3286163911610860551, guid: 685bfc4b9f984bfe80c85f31d5c4300c, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: fe93c4edb95a40259813f1088c19f866, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 1f6ba257e9fb487d91cc31fd39952106, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: e221e9a6eaad4ef78f7c052f1b77f382, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: df8f1e8604834eb89d2cca480a65b79b, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 612f851000bd4ca796941f1fc2aaa70d, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: ad158cf7961845639345a9ac6eee95b9, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: a1c63bf17411441e82a6dc2c12d9254c, type: 3}
+  rarity: 0
+  seedCost: 25
+  sellPrice: 37
+  xpReward: 24
+  unlockLevel: 2
+  tint: {r: 1, g: 1, b: 1, a: 1}

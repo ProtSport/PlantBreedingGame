@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: ficus
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: ficus
+  displayName: "\u0424\u0456\u043A\u0443\u0441 \u0411\u0435\u043D\u0434\u0436\u0430\u043C\u0456\u043D\u0430"
+  growTimeSeconds: 9000
+  waterDepleteSeconds: 2250
+  sprite25: {fileID: 3286163911610860551, guid: 0c54da130ca346789c250b2d17263ecc, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 1d49c9316ae4478d9eb82777def297af, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: cd607cf7576c44b9ab5ed03dd9f27ed1, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 80333c560d91478eb1ab94ced3800259, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 56617400ffb34e67a87b4180c25be293, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 9b1261ce3b954eeaa17cdfc465702f6f, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 7a09a8b5874f46c6bd65aaf4184649a1, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: 61a7e991e07f453391b2bab6e9c88c8e, type: 3}
+  rarity: 1
+  seedCost: 70
+  sellPrice: 99
+  xpReward: 62
+  unlockLevel: 7
+  tint: {r: 1, g: 1, b: 1, a: 1}

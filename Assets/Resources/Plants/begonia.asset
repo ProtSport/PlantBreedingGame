@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: begonia
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: begonia
+  displayName: "\u0411\u0435\u0433\u043E\u043D\u0456\u044F"
+  growTimeSeconds: 10800
+  waterDepleteSeconds: 2700
+  sprite25: {fileID: 3286163911610860551, guid: c0885c3abc224beda3f19c4bcbd0f7e5, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 9b9b2e79d3bc43d28cc2d33e7ca83815, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 7df28966c579488d91a4c5d037bd4cfd, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 781606d547f143f391be2f73a73e897d, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 04230dc25525445ea507b76f059c099d, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 91cf099f86164e6a8c403536eee09b1f, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 2fcec25262ae439a849b2dd8367c4759, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: 3ae7bccc4f454f408fdd537c256badc1, type: 3}
+  rarity: 1
+  seedCost: 80
+  sellPrice: 112
+  xpReward: 70
+  unlockLevel: 8
+  tint: {r: 1, g: 1, b: 1, a: 1}

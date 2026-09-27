@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: snake_plant
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: snake_plant
+  displayName: "\u0421\u0430\u043D\u0441\u0435\u0432'\u0454\u0440\u0456\u044F"
+  growTimeSeconds: 2700
+  waterDepleteSeconds: 675
+  sprite25: {fileID: 3286163911610860551, guid: 9a4368c24d1a4c2fb9aaac3f00ae2d9c, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 62958910e39c4faf972841548ea0bb40, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 73d693999e7240acb88a44897d16d3ad, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: d3142be0f02f41b4b3b204413dce1128, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: da1d556ce44c4ae99e07a07567f3d826, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: fcb42ec9253943a78bbc4b4e9ec1f917, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 36a60a97021c4a0cb183ae540e58779e, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: b22dbd000e6a4589a2547dea353706b3, type: 3}
+  rarity: 0
+  seedCost: 32
+  sellPrice: 47
+  xpReward: 30
+  unlockLevel: 3
+  tint: {r: 1, g: 1, b: 1, a: 1}

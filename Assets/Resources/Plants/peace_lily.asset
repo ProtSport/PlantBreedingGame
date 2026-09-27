@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: peace_lily
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: peace_lily
+  displayName: "\u0421\u043F\u0430\u0442\u0438\u0444\u0456\u043B\u0443\u043C"
+  growTimeSeconds: 7200
+  waterDepleteSeconds: 1800
+  sprite25: {fileID: 3286163911610860551, guid: f5397ad6a3154a538b047fc998f8e9b9, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: fed51e4529c14870949e7b43491af589, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 91c5c1355d01435da1ca78588b90ff82, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 8454e57218d0450ba17d9ebb471b6be6, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 1cc59d746caa41f09e2dc88a98f1e02a, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 9c6bcebc039e421d868c646802709ce9, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 504bc57066f84e17a3d0947e942a5194, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: d66e75d2bdc3477689c0e1cef58b85d6, type: 3}
+  rarity: 1
+  seedCost: 60
+  sellPrice: 86
+  xpReward: 55
+  unlockLevel: 6
+  tint: {r: 1, g: 1, b: 1, a: 1}

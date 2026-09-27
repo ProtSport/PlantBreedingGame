@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: aloe
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: aloe
+  displayName: "\u0410\u043B\u043E\u0435"
+  growTimeSeconds: 1200
+  waterDepleteSeconds: 300
+  sprite25: {fileID: 3286163911610860551, guid: 1225c515ed574cf880a20139cfd6dc1a, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: cacaeafbaf2740809c11090ed7a61f60, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 9b1bcfd6891d4949b4acbe6821aba8b0, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 9e27d8ef3a1d4a3c8104cae152ae29b9, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 615da632bfc546679b17744c45f8af86, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: dda0f67c9e864722a80dc126b1627d11, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 4595e1f5836b4c569afbcf98fab31ab2, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: 62807fdb75d64737bfda5c56c22be8a6, type: 3}
+  rarity: 0
+  seedCost: 18
+  sellPrice: 27
+  xpReward: 18
+  unlockLevel: 2
+  tint: {r: 1, g: 1, b: 1, a: 1}

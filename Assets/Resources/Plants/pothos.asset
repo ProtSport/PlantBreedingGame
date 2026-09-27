@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: pothos
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: pothos
+  displayName: "\u0415\u043F\u0456\u043F\u0440\u0435\u043C\u043D\u0443\u043C"
+  growTimeSeconds: 5400
+  waterDepleteSeconds: 1350
+  sprite25: {fileID: 3286163911610860551, guid: 90bd2c3d21b14a8d823dbeaf85a3ae70, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 2864147d91774729bf936d489846b4bb, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: dfb606c6aa44417bbdadbe4b044b194f, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: c8d847810cba4da9b8fd84d714296bb0, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 44eb73555eae4a5b9e0d8dfa5ca7386c, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 2ef89579250e474ab8f9ba915ffdb183, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: b7a161ee6bc2426e97ab2df380542458, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: d0f78fe30e0a470d81967628ff5a1fa1, type: 3}
+  rarity: 0
+  seedCost: 50
+  sellPrice: 72
+  xpReward: 45
+  unlockLevel: 5
+  tint: {r: 1, g: 1, b: 1, a: 1}

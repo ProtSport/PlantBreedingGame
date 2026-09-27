@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: geranium
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: geranium
+  displayName: "\u041F\u0435\u043B\u0430\u0440\u0433\u043E\u043D\u0456\u044F"
+  growTimeSeconds: 18000
+  waterDepleteSeconds: 4500
+  sprite25: {fileID: 3286163911610860551, guid: ecf6c4bd8893481ea77521788d5f55a6, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: ae284699b83d4ac38cd1bef0a7979bbf, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: 138587a703084abbbe69c091cc8167a1, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 9fbfed1250584d9bb7da46fed816c776, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 0bee9169724146008ca47f4d1ebc58d1, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 763d875855ef4b47a904328b17d08353, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: c4e1e56924774025825c11edecc41a58, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: f9e155d633fc4f729ed6b9cfd5577a03, type: 3}
+  rarity: 1
+  seedCost: 110
+  sellPrice: 152
+  xpReward: 95
+  unlockLevel: 10
+  tint: {r: 1, g: 1, b: 1, a: 1}

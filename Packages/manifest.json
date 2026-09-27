@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.inputsystem": "1.11.0",
+    "com.unity.mobile.notifications": "2.5.0",
+    "com.unity.modules.animation": "1.0.0",
+    "com.unity.modules.audio": "1.0.0",
+    "com.unity.modules.physics2d": "1.0.0",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.render-pipelines.universal": "17.0.3",
+    "com.unity.ugui": "2.0.0",
+    "com.unity.vectorgraphics": "3.0.0-preview.7"
+  }
+}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c242b0308b6be64479e0fffba39bd9e4, type: 3}
+  m_Name: anthurium
+  m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
+  plantId: anthurium
+  displayName: "\u0410\u043D\u0442\u0443\u0440\u0456\u0443\u043C"
+  growTimeSeconds: 21600
+  waterDepleteSeconds: 5400
+  sprite25: {fileID: 3286163911610860551, guid: 01d02cdc93d5482088d48cbdeb194d57, type: 3}
+  sprite50: {fileID: 3286163911610860551, guid: 0a1f8137114e4950b9cf216ad6bec470, type: 3}
+  sprite75: {fileID: 3286163911610860551, guid: e43811ecac0a4388a33ab407c0e947c1, type: 3}
+  sprite100: {fileID: 3286163911610860551, guid: 912f0c7a0ea7414abaea17f07a758de6, type: 3}
+  plantOnly25: {fileID: 3286163911610860551, guid: 9d1de9d7dedf45e9918ee155fc2bbff5, type: 3}
+  plantOnly50: {fileID: 3286163911610860551, guid: 41d185854cae4a449bdbcb660b304619, type: 3}
+  plantOnly75: {fileID: 3286163911610860551, guid: 8628af568170402cac8d521ae29e483a, type: 3}
+  plantOnly100: {fileID: 3286163911610860551, guid: be3e673989bb4215a97836963ae376ad, type: 3}
+  rarity: 1
+  seedCost: 125
+  sellPrice: 172
+  xpReward: 105
+  unlockLevel: 11
+  tint: {r: 1, g: 1, b: 1, a: 1}
