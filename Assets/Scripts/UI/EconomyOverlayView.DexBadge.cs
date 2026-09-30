@@ -1,14 +1,17 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using PlantBreeding.Collections;
 using PlantBreeding.Core;
 
 namespace PlantBreeding.UI
 {
     /// <summary>
     /// Кружечок з числом у правому верхньому куті іконки «Дендрарій» нижнього
-    /// меню: скільки нових рослин потрапило в колекції (PlayerData.unseenDexCount).
-    /// Зникає, коли гравець відкриває Дендрарій (DexScreenController → MarkDexSeen).
+    /// меню: скільки нових рослин потрапило в колекції (PlayerData.unseenDexCount)
+    /// плюс скільки нагород колекцій чекає (CollectionService.ClaimableCount).
+    /// Нові рослини скидаються, коли гравець відкриває Дендрарій (MarkDexSeen),
+    /// нагороди — коли їх забрано.
     /// </summary>
     public partial class EconomyOverlayView
     {
@@ -52,7 +55,7 @@ namespace PlantBreeding.UI
         {
             if (_dexBadge == null) return;
             var gm = GameManager.Instance;
-            int count = gm != null ? gm.playerData.unseenDexCount : 0;
+            int count = gm != null ? gm.playerData.unseenDexCount + CollectionService.ClaimableCount(gm.playerData) : 0;
             _dexBadge.SetActive(count > 0);
             if (count > 0) _dexBadgeLabel.text = count > 9 ? "9+" : count.ToString();
         }

@@ -114,7 +114,6 @@ namespace PlantBreeding.EditorTools
             // (відкриваються з шапки HeaderView будь-якого екрану), «Зібрати все».
             var economy = canvasGO.AddComponent<EconomyOverlayView>();
             economy.garden = gardenManager; // кнопка «Зібрати все»
-            economy.shopNavItem = root.Find("BottomNav/Nav_Крамниця") as RectTransform;
             economy.dexNavItem = root.Find("BottomNav/Nav_Дендрарій") as RectTransform; // бейдж нових рослин
             economy.sprRounded = LoadSprite("rounded-16");
             economy.sprRoundedLine = LoadSprite("rounded-16-line");
@@ -182,12 +181,33 @@ namespace PlantBreeding.EditorTools
         // ── Сітка грядок 2 × 3 (реальна, керована GardenManager) ─────────
         static GardenManager BuildGrid(Transform root, GameObject gmGO)
         {
-            var grid = new GameObject("Grid", typeof(RectTransform));
-            grid.transform.SetParent(root, false);
-            var rt = (RectTransform)grid.transform;
+            // Скрол: 6 грядок влазять без прокрутки, 7-ма/8-ма (Крамниця) — четвертий ряд.
+            var scroll = new GameObject("GridScroll", typeof(RectTransform), typeof(ScrollRect));
+            scroll.transform.SetParent(root, false);
+            var rt = (RectTransform)scroll.transform;
             rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 1);
             rt.offsetMin = new Vector2(16, 118);
             rt.offsetMax = new Vector2(-16, -190);
+
+            var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D), typeof(Image));
+            viewport.transform.SetParent(scroll.transform, false);
+            Stretch((RectTransform)viewport.transform);
+            viewport.GetComponent<Image>().color = new Color(1, 1, 1, 0.001f);
+
+            var grid = new GameObject("Grid", typeof(RectTransform), typeof(ContentSizeFitter));
+            grid.transform.SetParent(viewport.transform, false);
+            var grt = (RectTransform)grid.transform;
+            grt.anchorMin = new Vector2(0, 1); grt.anchorMax = new Vector2(1, 1);
+            grt.pivot = new Vector2(0.5f, 1);
+            grt.anchoredPosition = Vector2.zero;
+            grt.sizeDelta = Vector2.zero;
+            grid.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var sr = scroll.GetComponent<ScrollRect>();
+            sr.horizontal = false; sr.vertical = true;
+            sr.viewport = (RectTransform)viewport.transform;
+            sr.content = grt;
+            sr.movementType = ScrollRect.MovementType.Clamped;
 
             var gl = grid.AddComponent<GridLayoutGroup>();
             gl.cellSize = new Vector2(173, 170);
@@ -228,7 +248,7 @@ namespace PlantBreeding.EditorTools
             MakeNavItem(nav.transform, "nav-garden", "Сад", true, null, SceneNavButton.NavAction.OpenAdditive);
             MakeNavItem(nav.transform, "nav-lab", "Лабораторія", false, "Lab", SceneNavButton.NavAction.OpenAdditive);
             MakeNavItem(nav.transform, "nav-dex", "Дендрарій", false, "Dex", SceneNavButton.NavAction.OpenAdditive);
-            MakeNavItem(nav.transform, "nav-shop", "Крамниця", false, null, SceneNavButton.NavAction.OpenAdditive);
+            MakeNavItem(nav.transform, "nav-shop", "Крамниця", false, SceneNavButton.ShopScene, SceneNavButton.NavAction.OpenAdditive);
         }
 
         /// <summary>
@@ -329,10 +349,9 @@ namespace PlantBreeding.EditorTools
             lockedGroup.transform.SetParent(tile.transform, false);
             Stretch((RectTransform)lockedGroup.transform);
 
-            var lockBody = MakeImage("LockBody", lockedGroup.transform, LoadSprite("rounded-12"), Rgba(Color.white, 0.22f), Image.Type.Sliced);
-            Place(lockBody.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 6), new Vector2(26, 20));
-            var lockShackle = MakeImage("LockShackle", lockedGroup.transform, LoadSprite("circle-line"), Rgba(Color.white, 0.30f), Image.Type.Simple);
-            Place(lockShackle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 22), new Vector2(20, 20));
+            var lockIcon = MakeImage("LockIcon", lockedGroup.transform, LoadSprite("icon-lock", SvgDir), Rgba(Color.white, 0.28f), Image.Type.Simple);
+            lockIcon.preserveAspect = true;
+            Place(lockIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 12), new Vector2(34, 34));
             var lockedLbl = MakeLabel("Label", lockedGroup.transform, "Заблоковано", FontUi, 11, Hex("#6E7A64"), FontStyles.Bold);
             // 2 рядки: "Рівень N" / "або X монет" (EconomyService.LockedPlotLabel).
             Place(lockedLbl.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -32), new Vector2(150, 32));

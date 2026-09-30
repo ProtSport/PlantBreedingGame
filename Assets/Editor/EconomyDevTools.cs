@@ -60,6 +60,11 @@ namespace PlantBreeding.EditorTools
         [MenuItem(Root + "Зробити рослини хворими (Play)")]
         static void MakeSick()
         {
+            if (!PlantAilments.Enabled)
+            {
+                Debug.Log("[Economy] Хвороби вимкнені до STG 2 (PlantAilments.Enabled).");
+                return;
+            }
             var garden = UnityEngine.Object.FindFirstObjectByType<GardenManager>();
             if (garden == null) return;
             int i = 0;
@@ -80,13 +85,38 @@ namespace PlantBreeding.EditorTools
         [MenuItem(Root + "+100 XP (Play)")]
         static void AddXp() => GameManager.Instance?.AddXp(100);
 
+        [MenuItem(Root + "Відкрити всі види — тематичні колекції (Play)")]
+        static void DiscoverAll()
+        {
+            foreach (var plant in PlantCatalog.All) GameManager.Instance.RecordPlantDiscovered(plant.plantId);
+            Debug.Log("[Economy] Усі види відкрито — нагороди колекцій чекають у Дендрарії.");
+        }
+
         [MenuItem(Root + "Перемотати час +1 год (Play)", true)]
         [MenuItem(Root + "Перемотати час +8 год (Play)", true)]
         [MenuItem(Root + "Симулювати наступний день (Play)", true)]
         [MenuItem(Root + "Показати план push-сповіщень (Play)", true)]
         [MenuItem(Root + "Зробити рослини хворими (Play)", true)]
         [MenuItem(Root + "+500 монет (Play)", true)]
+        [MenuItem(Root + "Скинути покупки Крамниці (Play)")]
+        static void ResetShop()
+        {
+            var data = GameManager.Instance.playerData;
+            data.purchasedProductIds.Clear();
+            data.processedTransactionIds.Clear();
+            data.clubActive = false;
+            data.clubUntilUnixSeconds = 0;
+            data.lastClubGemsDay = "";
+            data.firstLaunchUnixSeconds = PlantBreeding.Core.GameClock.NowUnixSeconds; // «Стартовий» знову доступний
+            foreach (var pot in new[] { "crystal", "jade", "gold" }) data.ownedPotIds.Remove(pot);
+            data.ownedFrameIds.Remove(PlantBreeding.Shop.ShopCatalog.ClubFrameId);
+            PlantBreeding.Save.SaveSystem.Save(data);
+            Debug.Log("[Economy] Покупки Крамниці скинуто (7-ма/8-ма грядки зникнуть після перезапуску сцени саду).");
+        }
+
         [MenuItem(Root + "+100 XP (Play)", true)]
+        [MenuItem(Root + "Скинути покупки Крамниці (Play)", true)]
+        [MenuItem(Root + "Відкрити всі види — тематичні колекції (Play)", true)]
         static bool IsPlaying() => Application.isPlaying && GameManager.Instance != null;
 
         static void SkipTime(TimeSpan span)

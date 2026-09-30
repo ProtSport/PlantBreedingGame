@@ -49,7 +49,7 @@ namespace PlantBreeding.Core
         // за токен зміни імені (renameTokens) — рідкісна нагорода, не валюта.
         // owned*/active* — інвентар предметів кастомізації профілю
         // (аватари/рамки), окремий від інвентарю рослин/горщиків. Джерело
-        // правди для прогресу — ProfileItemCatalog (аналог CollectionCatalog).
+        // правди для прогресу — ProfileItemCatalog; частину видають колекції (CollectionCatalog).
         public string playerName = "Садівник";
         public int renameTokens = 0;
         public List<string> ownedAvatarIds = new List<string>();
@@ -72,8 +72,39 @@ namespace PlantBreeding.Core
         // Грядки, відкриті за монети раніше за потрібний рівень.
         public List<int> boughtPlotIndices = new List<int>();
 
-        // Колекції кімнатних рослин, за які вже видано кристал (PlantCollections).
+        // ── Колекції Дендрарію (Collections/CollectionService, docs/ECONOMY.md) ──
+        // Старі сейви: колекції, за які кристал уже видано автоматично (до появи
+        // кнопки «Забрати») — при отриманні нагороди кристал не дублюється.
         public List<string> completedCollectionIds = new List<string>();
+        // Нагороду забрано (діють постійні бонуси колекції).
+        public List<string> claimedCollectionIds = new List<string>();
+        // Про завершення вже повідомлено тостом (щоб не повторювати).
+        public List<string> announcedCollectionIds = new List<string>();
+        // Прогрес колекцій майстерності.
+        public List<string> perfectCarePlantIds = new List<string>();
+        public List<int> curedAilmentKinds = new List<int>();
+        public List<SeedStack> harvestCounts = new List<SeedStack>(); // plantId → скільки разів зібрано
+        // Титули з колекцій; активний показується замість звання в Профілі.
+        public List<string> ownedTitleIds = new List<string>();
+        public string activeTitleId = "";
+        // Колекція тижня: ISO-тиждень, 4 види на тиждень, зібрані цього тижня, нагороду забрано.
+        public string weekKey = "";
+        public List<string> weekPlantIds = new List<string>();
+        public List<string> weekHarvestedIds = new List<string>();
+        public bool weekClaimed;
+
+        // ── Крамниця (Shop/ShopService, docs/ECONOMY.md) ──
+        // Перший запуск — від нього рахується вікно «Стартового» набору.
+        public double firstLaunchUnixSeconds;
+        // Куплені назавжди товари (горщики, грядки) і вже куплені одноразові набори.
+        public List<string> purchasedProductIds = new List<string>();
+        // Останні оброблені транзакції магазину — захист від подвійного нарахування.
+        public List<string> processedTransactionIds = new List<string>();
+        // «Клуб садівника»: активність за перевіркою магазину, запасний строк
+        // (тестова покупка в редакторі) і день останніх щоденних кристалів.
+        public bool clubActive;
+        public double clubUntilUnixSeconds;
+        public string lastClubGemsDay = "";
 
         // Найпізніший момент ігрового часу, який бачила гра (GameClock) —
         // захист від перемотування годинника пристрою назад.

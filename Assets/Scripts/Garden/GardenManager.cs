@@ -49,12 +49,14 @@ namespace PlantBreeding.Garden
         {
             Current = this;
             GameEvents.OnLevelUp += HandleLevelUp;
+            Shop.ShopService.Changed += AddPurchasedPlots;
         }
 
         private void OnDisable()
         {
             if (Current == this) Current = null;
             GameEvents.OnLevelUp -= HandleLevelUp;
+            Shop.ShopService.Changed -= AddPurchasedPlots;
         }
 
         private void Start()
@@ -89,24 +91,45 @@ namespace PlantBreeding.Garden
             }
         }
 
+        /// <summary>Базові 6 грядок + куплені в Крамниці (7-ма, 8-ма).</summary>
+        private int TargetPlotCount
+        {
+            get
+            {
+                var data = GameManager.Instance != null ? GameManager.Instance.playerData : null;
+                return gridSize + (data != null ? Shop.ShopService.ExtraPlotCount(data) : 0);
+            }
+        }
+
         private void BuildGrid()
         {
+            for (int i = 0; i < TargetPlotCount; i++) AddSlot(i);
+        }
+
+        /// <summary>Грядку куплено в Крамниці, поки сад відкритий під нею, — дорисувати.</summary>
+        private void AddPurchasedPlots()
+        {
+            int target = TargetPlotCount;
+            if (_plots.Count >= target) return;
+            for (int i = _plots.Count; i < target; i++) AddSlot(i);
+            GameEvents.RaisePlotStateChanged(-1);
+        }
+
+        private void AddSlot(int i)
+        {
             var data = GameManager.Instance != null ? GameManager.Instance.playerData : null;
-            for (int i = 0; i < gridSize; i++)
-            {
-                bool unlocked = data != null ? EconomyService.IsPlotUnlocked(data, i) : i < initiallyUnlocked;
-                var slot = new PlotSlot(i, unlocked);
-                if (data != null) slot.RestoreFrom(data.plots.Find(p => p.slotIndex == i));
-                slot.Tick(); // одразу дорахувати час, що минув, поки гра була закрита
-                slot.StateChanged += PersistSlot;
-                _plots.Add(slot);
+            bool unlocked = data != null ? EconomyService.IsPlotUnlocked(data, i) : i < initiallyUnlocked;
+            var slot = new PlotSlot(i, unlocked);
+            if (data != null) slot.RestoreFrom(data.plots.Find(p => p.slotIndex == i));
+            slot.Tick(); // одразу дорахувати час, що минув, поки гра була закрита
+            slot.StateChanged += PersistSlot;
+            _plots.Add(slot);
 
-                if (plotViewPrefab == null || gridParent == null) continue;
+            if (plotViewPrefab == null || gridParent == null) return;
 
-                var view = Instantiate(plotViewPrefab, gridParent);
-                view.Bind(slot, this);
-                _views.Add(view);
-            }
+            var view = Instantiate(plotViewPrefab, gridParent);
+            view.Bind(slot, this);
+            _views.Add(view);
         }
 
         public int ReadyCount

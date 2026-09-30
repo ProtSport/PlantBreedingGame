@@ -107,6 +107,7 @@ namespace PlantBreeding.UI
             _frameCountLabel = frameCountLabel;
         }
 
+        private Image _heroIcon;
         private TMP_Text _avatarCountLabel;
         private TMP_Text _frameCountLabel;
         private readonly List<(AvatarDef def, Image bg, Image icon, GameObject checkBadge, GameObject lockBadge)> _avatarCells = new();
@@ -142,6 +143,7 @@ namespace PlantBreeding.UI
 
             var icon = MakeImage(hero.transform, "Sprig", sprSprig, Hex("#DDE8C8"), Image.Type.Simple);
             icon.preserveAspect = true;
+            _heroIcon = icon;
             Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -6), new Vector2(72, 72));
         }
 
@@ -228,7 +230,8 @@ namespace PlantBreeding.UI
             var gl = grid.GetComponent<GridLayoutGroup>();
             gl.cellSize = new Vector2(80, 80); gl.spacing = new Vector2(11, 11);
             gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = 4;
-            grid.GetComponent<LayoutElement>().preferredHeight = 2 * 80 + 11;
+            int avRows = (ProfileItemCatalog.Avatars.Length + 3) / 4;
+            grid.GetComponent<LayoutElement>().preferredHeight = avRows * 80 + (avRows - 1) * 11;
 
             foreach (var def in ProfileItemCatalog.Avatars)
             {
@@ -238,7 +241,7 @@ namespace PlantBreeding.UI
                 bg.sprite = sprRoundedCard; bg.type = Image.Type.Sliced;
                 var border = MakeImage(cell.transform, "Border", sprRoundedCardLine, Rgba(Color.white, 0.1f), Image.Type.Sliced);
                 Stretch(border.rectTransform);
-                var icon = MakeImage(cell.transform, "Sprig", sprSprig, Color.white, Image.Type.Simple);
+                var icon = MakeImage(cell.transform, "Sprig", sprSprig, Hex(def.tintHex), Image.Type.Simple);
                 icon.preserveAspect = true;
                 Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(36, 36));
                 var check = MakeCheckBadge(cell.transform);
@@ -260,7 +263,8 @@ namespace PlantBreeding.UI
             var gl = grid.GetComponent<GridLayoutGroup>();
             gl.cellSize = new Vector2(80, 96); gl.spacing = new Vector2(11, 11);
             gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = 4;
-            grid.GetComponent<LayoutElement>().preferredHeight = 96;
+            int frRows = (ProfileItemCatalog.Frames.Length + 3) / 4;
+            grid.GetComponent<LayoutElement>().preferredHeight = frRows * 96 + (frRows - 1) * 11;
 
             foreach (var def in ProfileItemCatalog.Frames)
             {
@@ -327,6 +331,8 @@ namespace PlantBreeding.UI
 
             string tier = gm.GetPrestigeTier();
             _heroRing.color = TierColor(tier);
+            var activeAvatar = ProfileItemCatalog.FindAvatar(data.activeAvatarId);
+            if (_heroIcon != null) _heroIcon.color = Hex(activeAvatar != null ? activeAvatar.tintHex : "#DDE8C8");
             if (_heroSparkles != null) _heroSparkles.gameObject.SetActive(tier == "spark");
 
             _nameLabel.text = data.playerName;

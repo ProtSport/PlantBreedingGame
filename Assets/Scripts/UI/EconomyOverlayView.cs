@@ -34,10 +34,6 @@ namespace PlantBreeding.UI
     {
         public static EconomyOverlayView Instance { get; private set; }
 
-        [Header("Посилання зі сцени")]
-        [Tooltip("Пункт «Крамниця» нижнього меню (декоративний у білдері — клік додається тут)")]
-        public RectTransform shopNavItem;
-
         [Header("Спільна графіка (з UIBuilderKit)")]
         public Sprite sprRounded;
         public Sprite sprRoundedLine;
@@ -110,15 +106,12 @@ namespace PlantBreeding.UI
             BuildModal();
             BuildSpeedUpModal();
             BuildTreatmentModal();
-            BuildShopModal();
             BuildSettingsSheet();
-            HookShopEntryPoints();
             BuildDexBadge();
 
             _modal.SetActive(false);
             _speedModal.SetActive(false);
             _treatModal.SetActive(false);
-            _shopModal.SetActive(false);
             RefreshAll();
             RefreshHarvestAll();
             RefreshDexBadge();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using PlantBreeding.Collections;
 using PlantBreeding.Core;
 using PlantBreeding.Garden;
 using PlantBreeding.Lab;
@@ -118,23 +119,25 @@ namespace PlantBreeding.Economy
         // ════════════════════════════════════════════════════════════════
         /// <summary>
         /// Нараховує все за зібрану рослину: продаж (з бонусом догляду і
-        /// лабораторії), XP, відкриття в Дендрарії, бонуси першого врожаю,
-        /// прогрес завдань. Викликається з PlotSlot.Harvest.
+        /// лабораторії, колекцій), XP, відкриття в Дендрарії, прогрес колекцій,
+        /// бонуси першого врожаю, прогрес завдань. Викликається з PlotSlot.Harvest.
+        /// perfectCare — жоден полив не пропущено (колекція «Ідеальний догляд»).
         /// silent = без тосту про продаж (для «Зібрати все», де показується один
         /// підсумковий тост). Повертає нараховані за продаж монети.
         /// </summary>
-        public static int GrantHarvest(PlantData plant, PotData pot, int wateredCount, bool silent = false)
+        public static int GrantHarvest(PlantData plant, PotData pot, int wateredCount, bool perfectCare = false, bool silent = false)
         {
             var gm = Gm;
             if (gm == null || plant == null) return 0;
             var data = gm.playerData;
 
-            float care = 1f + Mathf.Min(wateredCount, EconomyConfig.MaxCareWaterings) * EconomyConfig.CareBonusPerWatering;
+            float care = 1f + Mathf.Min(wateredCount, EconomyConfig.MaxCareWaterings) * CollectionService.CareBonusPerWatering;
             int price = Mathf.RoundToInt(PlantingForecast.SellPriceWithBonuses(plant, pot) * care);
             bool doubled = UnityEngine.Random.value < LabResearchService.GetYieldDoubleHarvestChance(data);
             if (doubled) price *= 2;
 
             gm.RecordPlantDiscovered(plant.plantId);
+            CollectionService.OnHarvest(plant.plantId, perfectCare);
             gm.AddCoins(price);
             data.totalHarvests++;
             GameNotifications.MaybeRequestPermission(data); // після 2-го врожаю
@@ -158,7 +161,9 @@ namespace PlantBreeding.Economy
             Track(DailyTaskKind.EarnCoins, price);
 
             // XP в кінці — level up міг би показати тост раніше за сам урожай.
-            gm.AddXp(PlantEconomy.HarvestXp(plant));
+            float xpBonus = (pot != null ? pot.xpBonus : 0f) + CollectionService.XpBonus(plant.plantId)
+                + LabResearchService.GetXpBonus(data);
+            gm.AddXp(Mathf.RoundToInt(PlantEconomy.HarvestXp(plant) * (1f + xpBonus)));
             SaveSystem.Save(data);
             return price;
         }
@@ -203,7 +208,8 @@ namespace PlantBreeding.Economy
         //  ГРЯДКИ
         // ════════════════════════════════════════════════════════════════
         public static bool IsPlotUnlocked(PlayerData data, int slotIndex) =>
-            EconomyConfig.GetPlotRule(slotIndex).level <= data.level || data.boughtPlotIndices.Contains(slotIndex);
+            EconomyConfig.GetPlotRule(slotIndex).level <= data.level || data.boughtPlotIndices.Contains(slotIndex)
+            || Shop.ShopService.IsExtraPlotUnlocked(data, slotIndex); // 7-ма/8-ма — з Крамниці
 
         public static string LockedPlotLabel(int slotIndex)
         {
@@ -323,7 +329,7 @@ namespace PlantBreeding.Economy
                 .ToList();
 
             // «Вилікувати» — лише коли хвороби вже можливі (після навчальних урожаїв).
-            int variants = data.totalHarvests >= PlantAilments.GraceHarvests && lvl >= 3 ? 4 : 3;
+            int variants = PlantAilments.Enabled && data.totalHarvests >= PlantAilments.GraceHarvests && lvl >= 3 ? 4 : 3;
             int roll = rng.Next(variants);
             if (roll == 0 && unlockedNonStarter.Count > 0)
             {

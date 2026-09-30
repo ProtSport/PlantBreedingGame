@@ -4,8 +4,9 @@ namespace PlantBreeding.Lab
     public enum LabBranchId
     {
         Speed,
-        Health,
-        Yield
+        Health, // вимкнена до STG 2 разом із хворобами (PlantAilments.Enabled)
+        Yield,
+        Xp      // «Досвід» — замість «Здоров'я», поки хвороби вимкнені
     }
 
     /// <summary>
@@ -70,7 +71,7 @@ namespace PlantBreeding.Lab
         // кристали лише купуються в Крамниці (docs/ECONOMY.md).
         static readonly int[] GemReward = { 0, 0, 0, 0 };
 
-        public static readonly LabBranchDef[] Branches =
+        private static readonly LabBranchDef[] AllBranches =
         {
             new LabBranchDef
             {
@@ -102,6 +103,20 @@ namespace PlantBreeding.Lab
             },
             new LabBranchDef
             {
+                id = LabBranchId.Xp,
+                displayName = "Досвід",
+                subLabel = "більше XP з кожного врожаю",
+                accent = "blue",
+                nodes = new[]
+                {
+                    Node(0, "+5%", "XP", 0.05f),
+                    Node(1, "+10%", "XP", 0.10f),
+                    Node(2, "+15%", "XP", 0.15f),
+                    Node(3, "+20%", "XP", 0.20f),
+                }
+            },
+            new LabBranchDef
+            {
                 id = LabBranchId.Yield,
                 displayName = "Врожайність",
                 subLabel = "більше прибутку з рослини",
@@ -116,15 +131,24 @@ namespace PlantBreeding.Lab
             },
         };
 
+        /// <summary>
+        /// Гілки, що є в грі зараз: «Здоров'я» лише з хворобами, інакше на її
+        /// місці «Досвід» (рішення 2026-09-30, docs/RELEASE-PLAN.md).
+        /// </summary>
+        public static readonly LabBranchDef[] Branches = System.Array.FindAll(AllBranches, b =>
+            b.id == LabBranchId.Health ? Garden.PlantAilments.Enabled
+            : b.id == LabBranchId.Xp ? !Garden.PlantAilments.Enabled
+            : true);
+
         static LabNodeDef Node(int index, string line1, string line2, float magnitude) => new LabNodeDef(
             line1, line2, CoinCost[index], GemCost[index], DurationSeconds[index], magnitude,
             MaxRushGemCost[index], GemReward[index]);
 
         public static LabBranchDef GetBranch(LabBranchId id)
         {
-            foreach (var b in Branches)
+            foreach (var b in AllBranches)
                 if (b.id == id) return b;
-            return Branches[0];
+            return AllBranches[0];
         }
 
         public static LabNodeDef GetNode(LabBranchId id, int index) => GetBranch(id).nodes[index];

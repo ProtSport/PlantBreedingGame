@@ -1,188 +1,142 @@
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace PlantBreeding.Collections
 {
+    /// <summary>Розділ Дендрарію (чіпи-фільтри).</summary>
+    public enum CollectionGroup
+    {
+        Theme,   // тематичні: відкрити 4 види (перший урожай)
+        Mastery  // майстерність: довгі цілі після рівня 18
+    }
+
+    /// <summary>Що саме заповнює слот колекції (прогрес рахує CollectionService).</summary>
+    public enum CollectionGoal
+    {
+        DiscoverPlant,   // слот = plantId, заповнений після першого врожаю виду
+        PerfectCare,     // слот = plantId, вирощений без пропущеного поливу
+        HarvestPlant,    // слот = plantId, зібраний VeteranHarvests разів
+        CureAilment,     // слот = AilmentKind (число), хоч раз вилікувано
+        OwnPot,          // слот = potId, горщик куплено
+        CompleteCollection // слот = id іншої колекції, вона зібрана
+    }
+
+    /// <summary>Постійний бонус, що діє після отримання нагороди колекції.</summary>
+    public enum CollectionBonusKind
+    {
+        None,
+        WaterInterval,   // види колекції просять води рідше (+частка до інтервалу)
+        SellPrice,       // види колекції дорожчі при продажу
+        AilmentResist,   // види колекції рідше хворіють
+        Xp,              // види колекції дають більше XP
+        CarePerWatering  // кожен вчасний полив дає більший бонус (усі види)
+    }
+
     /// <summary>
-    /// Статичні дані екрану «Дендрарій · Колекції» (ТЗ «Дендрарій — тільки
-    /// колекції»). ЦЕ ПЛЕЙСХОЛДЕР-КАРКАС: у грі поки існує лише вид rose_basic,
-    /// тому прогрес/слоти тут прописані вручну — рівно як мок-масиви в макеті
-    /// Дендрарій/export/dex-collections.html (WEEK / COLLECTIONS / SHOWCASE /
-    /// DETAIL).
+    /// Каталог колекцій Дендрарію (docs/ECONOMY.md, розділ «Колекції»):
+    /// 6 тематичних (5 наборів по 4 кімнатні рослини + мета «Ботанік») і
+    /// 4 колекції майстерності. Лише дані — прогрес, нагороди й бонуси рахує
+    /// CollectionService від реального стану гравця (PlayerData).
     ///
-    /// Справжнє джерело правди прогресу — PlayerData.discoveredPlantIds
-    /// (заповнюється в PlotSlot.Harvest, Pokédex-логіка). Коли з'явиться більше
-    /// видів, цей каталог замінить CollectionService, що рахуватиме заповнені
-    /// слоти з реєстру відкриттів, а не з жорстко прописаних тут значень.
-    /// Тип колекцій і правила формування слотів — ТЗ п.2.
+    /// Кристали — лише 7 за всю гру (5 тематичних + «Ідеальний догляд» +
+    /// «Садівник-ветеран»), решта нагород — монети, предмети профілю,
+    /// ексклюзивний горщик і постійні бонуси.
     /// </summary>
     public static class CollectionCatalog
     {
-        // Чіпи-фільтри під карткою тижня (фільтрують список за typeLabel).
-        public static readonly string[] Chips = { "Усі", "За родиною", "Рідкість", "Особливі" };
+        /// <summary>Скільки разів треба зібрати вид для слота «Садівник-ветеран».</summary>
+        public const int VeteranHarvests = 10;
 
-        /// <summary>
-        /// Колекція тижня (ТЗ п.7): реальна логіка (не мок) — раз на 7 днів
-        /// обирається тема з 4 видів, які гравець вже колись відкривав,
-        /// детерміновано на ISO-тиждень (той самий набір увесь тиждень без
-        /// бекенду). Якщо відкрито менше 4 видів — повертає null, і UI
-        /// показує заглушку "Відкрий більше видів".
-        /// Слот вважається виконаним одразу — вид уже відкрито назавжди,
-        /// той самий принцип "прогрес від факту відкриття", що й для інших
-        /// колекцій (ТЗ п.0). Окремого трекінгу "перезібрано саме цього
-        /// тижня" зараз немає — додати разом із CollectionService, коли
-        /// зʼявиться більше видів і сенс у справжньому re-collect-квесті.
-        /// </summary>
-        public static WeekDef GetWeeklyCollection(IReadOnlyList<string> discoveredIds)
+        /// <summary>Чіпи-фільтри Дендрарію: 0 — усі, далі по CollectionGroup.</summary>
+        public static readonly string[] Chips = { "Усі", "Тематичні", "Майстерність" };
+
+        private static readonly CollectionDef[] Catalog =
         {
-            if (discoveredIds == null || discoveredIds.Count < 4) return null;
+            // ── Тематичні ───────────────────────────────────────────────────
+            new CollectionDef("succulents", "Сукуленти", CollectionGroup.Theme, CollectionGoal.DiscoverPlant, "green",
+                "Невибагливі рослини, що запасають воду в листі.",
+                "Виростай кожен вид хоч раз — слот заповнюється після першого врожаю.",
+                new[] { "cactus", "aloe", "snake_plant", "zz_plant" },
+                new CollectionReward { gems = 1, coins = 100, avatarId = "cactus",
+                    bonus = CollectionBonusKind.WaterInterval, bonusValue = 0.25f }),
 
-            var pool = new List<string>(discoveredIds);
-            pool.Sort(StringComparer.Ordinal); // стабільний порядок перед детермінованим вибором
+            new CollectionDef("windowsill", "Квіти на підвіконні", CollectionGroup.Theme, CollectionGoal.DiscoverPlant, "rose",
+                "Квітучі рослини для світлого підвіконня.",
+                "Виростай кожен вид хоч раз — слот заповнюється після першого врожаю.",
+                new[] { "violet", "peace_lily", "begonia", "geranium" },
+                new CollectionReward { gems = 1, coins = 250, frameId = "floral",
+                    bonus = CollectionBonusKind.SellPrice, bonusValue = 0.05f }),
 
-            var now = DateTime.UtcNow;
-            int seed = ISOWeek.GetYear(now) * 100 + ISOWeek.GetWeekOfYear(now);
-            var rng = new Random(seed);
-            var picked = new List<string>();
-            for (int i = 0; i < 4 && pool.Count > 0; i++)
-            {
-                int idx = rng.Next(pool.Count);
-                picked.Add(pool[idx]);
-                pool.RemoveAt(idx);
-            }
+            new CollectionDef("green_leaves", "Зелене листя", CollectionGroup.Theme, CollectionGoal.DiscoverPlant, "green",
+                "Декоративно-листяні рослини — зелень на весь рік.",
+                "Виростай кожен вид хоч раз — слот заповнюється після першого врожаю.",
+                new[] { "spider_plant", "pothos", "ficus", "calathea" },
+                new CollectionReward { gems = 1, coins = 250, avatarId = "leaf",
+                    // Без хвороб (STG 1) «рідше хворіють» нічого не дає — замість нього +10% XP.
+                    bonus = PlantBreeding.Garden.PlantAilments.Enabled ? CollectionBonusKind.AilmentResist : CollectionBonusKind.Xp,
+                    bonusValue = PlantBreeding.Garden.PlantAilments.Enabled ? 0.20f : 0.10f }),
 
-            var slots = new List<SlotDef>();
-            foreach (var plantId in picked)
-            {
-                var plant = UnityEngine.Resources.Load<Garden.PlantData>("Plants/" + plantId);
-                slots.Add(new SlotDef("green", true, plant != null ? plant.displayName : plantId));
-            }
+            new CollectionDef("tropics", "Тропіки вдома", CollectionGroup.Theme, CollectionGoal.DiscoverPlant, "violet",
+                "Великі тропічні рослини з яскравим листям і квітами.",
+                "Виростай кожен вид хоч раз — слот заповнюється після першого врожаю.",
+                new[] { "anthurium", "monstera", "hibiscus", "fiddle_leaf_fig" },
+                new CollectionReward { gems = 1, coins = 500, potId = "bamboo",
+                    bonus = CollectionBonusKind.Xp, bonusValue = 0.05f }),
 
-            int daysUntilMonday = ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7;
-            if (daysUntilMonday == 0) daysUntilMonday = 7;
+            new CollectionDef("rare_beauties", "Рідкісні красуні", CollectionGroup.Theme, CollectionGoal.DiscoverPlant, "gold",
+                "Найвибагливіші рослини гри — вершина садівника.",
+                "Виростай кожен вид хоч раз — слот заповнюється після першого врожаю.",
+                new[] { "azalea", "gardenia", "strelitzia", "orchid" },
+                new CollectionReward { gems = 1, coins = 1000, avatarId = "leg",
+                    bonus = CollectionBonusKind.SellPrice, bonusValue = 0.05f }),
 
-            return new WeekDef
-            {
-                title = "Тема тижня",
-                desc = "4 знайомих види, обрані на цей тиждень — уже є у твоїй колекції.",
-                endsIn = daysUntilMonday + " дн",
-                count = "4/4",
-                pct = 100,
-                slots = slots,
-            };
-        }
+            new CollectionDef("botanist", "Ботанік", CollectionGroup.Theme, CollectionGoal.CompleteCollection, "gold",
+                "Збери всі 5 тематичних колекцій.",
+                "Слот заповнюється, щойно зібрано відповідну колекцію (нагороду забирати не обов'язково).",
+                new[] { "succulents", "windowsill", "green_leaves", "tropics", "rare_beauties" },
+                new CollectionReward { coins = 1000, frameId = "spark", titleId = "Ботанік" }),
 
-        public static readonly List<CollectionDef> Collections = new List<CollectionDef>
-        {
-            new CollectionDef
-            {
-                id = "roses", name = "Родина троянд", typeLabel = "За родиною", accent = "rose",
-                desc = "База → рідкісна → епічна → легендарна форма троянди.",
-                miniSlots = new List<SlotDef>
-                {
-                    new SlotDef("rose", true), new SlotDef("rose", true),
-                    new SlotDef("gold", true), new SlotDef("lock", false),
-                },
-                count = "3/4", pct = 75, claim = false, reward = "рамка «Трояндова» + 50 кр.",
-                detail = new DetailDef
-                {
-                    typeLabel = "За родиною · постійна", name = "Родина троянд", count = "3/4", pct = 75,
-                    intro = "Усі рідкісні форми троянди. Слот лишається заповненим НАЗАВЖДИ після першого збору — навіть якщо ти продав рослину.",
-                    hint = "Легендарну троянду виводять у Лабораторії через схрещування рідкісної + епічної.",
-                    claimLabel = "Забрати нагороду · ще 1 слот",
-                    slots = new List<SlotDef>
-                    {
-                        new SlotDef("rose", true, "Базова", "лвл 1", "зібрано 12×"),
-                        new SlotDef("blue", true, "Рідкісна", "лвл 2", "зібрано 3×"),
-                        new SlotDef("gold", true, "Епічна", "лвл 3", "зібрано 1×"),
-                        new SlotDef("lock", false, "Легендарна"),
-                    },
-                },
-            },
-            new CollectionDef
-            {
-                id = "gold", name = "Золота колекція", typeLabel = "Особливі", accent = "gold",
-                desc = "По одному золотистому варіанту кожного виду.",
-                miniSlots = new List<SlotDef>
-                {
-                    new SlotDef("gold", true), new SlotDef("gold", true), new SlotDef("lock", false),
-                    new SlotDef("lock", false), new SlotDef("lock", false),
-                },
-                count = "2/9", pct = 22, claim = false, reward = "золота лійка + 200 кр.",
-                detail = new DetailDef
-                {
-                    typeLabel = "Особливі · постійна", name = "Золота колекція", count = "2/9", pct = 22,
-                    intro = "По одному золотистому варіанту кожного виду. Золоті форми випадають рідко при ідеальному догляді.",
-                    hint = "Золоті варіанти частіше з'являються при ідеальній якості догляду під час росту.",
-                    claimLabel = "Забрати нагороду · зібери 9",
-                    slots = new List<SlotDef>
-                    {
-                        new SlotDef("gold", true, "Троянда", "золота", "зібрано 4×"),
-                        new SlotDef("gold", true, "Фікус", "золотий", "зібрано 1×"),
-                        new SlotDef("lock", false, "Півонія"),
-                        new SlotDef("lock", false, "Орхідея"),
-                        new SlotDef("lock", false, "Лотос"),
-                    },
-                },
-            },
-            new CollectionDef
-            {
-                id = "legendary", name = "Усі легендарні", typeLabel = "Рідкість", accent = "violet",
-                desc = "По одному екземпляру кожної легендарної рослини гри.",
-                miniSlots = new List<SlotDef>
-                {
-                    new SlotDef("violet", true), new SlotDef("lock", false), new SlotDef("lock", false),
-                    new SlotDef("lock", false), new SlotDef("lock", false),
-                },
-                count = "1/7", pct = 14, claim = false, reward = "титул «Легендар» + 500 кр.",
-                detail = new DetailDef
-                {
-                    typeLabel = "Рідкість · постійна, розширюється", name = "Усі легендарні", count = "1/7", pct = 14,
-                    intro = "По одному екземпляру кожної легендарної рослини. Набір автоматично росте, коли в оновленнях додають нові легендарні види (ТЗ п.4).",
-                    hint = "Легендарні виводяться лише схрещуванням у Лабораторії — за монети їх не купити.",
-                    claimLabel = "Забрати нагороду · зібери 7",
-                    slots = new List<SlotDef>
-                    {
-                        new SlotDef("violet", true, "Місячна троянда", "легенда", "зібрано 1×"),
-                        new SlotDef("lock", false, "Вогнецвіт"),
-                        new SlotDef("lock", false, "Зоряний лотос"),
-                        new SlotDef("lock", false, "Кришталева орхідея"),
-                        new SlotDef("lock", false, "Тіньова папороть"),
-                        new SlotDef("lock", false, "Сонячний сонях"),
-                        new SlotDef("lock", false, "Райдужний пік"),
-                    },
-                },
-            },
-            new CollectionDef
-            {
-                id = "glow", name = "Світло та метелики", typeLabel = "Особливі", accent = "green",
-                desc = "Види, що світяться вночі й приваблюють метеликів.",
-                miniSlots = new List<SlotDef>
-                {
-                    new SlotDef("green", true), new SlotDef("green", true),
-                    new SlotDef("green", true), new SlotDef("green", true),
-                },
-                count = "4/4", pct = 100, claim = true, reward = "фон «Світляки» + 120 кр.",
-                detail = new DetailDef
-                {
-                    typeLabel = "Особливі · постійна", name = "Світло та метелики", count = "4/4", pct = 100,
-                    intro = "Види, що світяться вночі й приваблюють метеликів. Колекцію завершено — забери нагороду.",
-                    hint = "Нічне світіння видно на екрані «Мій сад» після заходу сонця.",
-                    claimLabel = "Забрати нагороду",
-                    slots = new List<SlotDef>
-                    {
-                        new SlotDef("green", true, "Світляк", "лвл 1", "зібрано 8×"),
-                        new SlotDef("green", true, "Місячниця", "лвл 2", "зібрано 5×"),
-                        new SlotDef("green", true, "Нічна фіалка", "лвл 3", "зібрано 2×"),
-                        new SlotDef("green", true, "Метеликоцвіт", "лвл 4", "зібрано 1×"),
-                    },
-                },
-            },
+            // ── Майстерність ────────────────────────────────────────────────
+            new CollectionDef("doctor", "Лікар рослин", CollectionGroup.Mastery, CollectionGoal.CureAilment, "blue",
+                "Вилікуй кожну хворобу і прожени кожного шкідника хоч раз.",
+                "Хвороби з'являються з 3-го рівня на рослинах, що ростуть довше 15 хвилин.",
+                new[] { "1", "2", "3", "4" },
+                new CollectionReward { coins = 300, avatarId = "doctor" }),
+
+            new CollectionDef("potter", "Колекція горщиків", CollectionGroup.Mastery, CollectionGoal.OwnPot, "gold",
+                "Купи всі горщики за монети.",
+                "Горщики купуються на екрані Посадки, секція «Горщик».",
+                new[] { "terracotta", "ceramic", "wicker", "concrete", "brass", "marble" },
+                new CollectionReward { frameId = "marble", titleId = "Гончар" }),
+
+            new CollectionDef("perfect_care", "Ідеальний догляд", CollectionGroup.Mastery, CollectionGoal.PerfectCare, "blue",
+                "Виростай кожен вид, не пропустивши жодного поливу.",
+                "Поливай щоразу, коли рослина просить води. Прискорення за кристали скорочує час для поливів.",
+                null, // усі види (PlantCatalog)
+                new CollectionReward { gems = 1, frameId = "dew",
+                    bonus = CollectionBonusKind.CarePerWatering, bonusValue = 0.02f }),
+
+            new CollectionDef("veteran", "Садівник-ветеран", CollectionGroup.Mastery, CollectionGoal.HarvestPlant, "violet",
+                "Збери врожай кожного виду 10 разів.",
+                "Рахуються врожаї, зібрані після появи цієї колекції в грі.",
+                null, // усі види (PlantCatalog)
+                new CollectionReward { gems = 1, avatarId = "can", titleId = "Ветеран" }),
         };
 
-        // Особиста вітрина: 4 обрані рослини + 1 порожній слот «додати»
-        // (обробляється в UI). Без прогресу й нагороди (ТЗ п.2).
+        /// <summary>
+        /// Колекції, що є в грі зараз: без «Лікаря рослин», поки хвороби вимкнені
+        /// (PlantAilments.Enabled, STG 2).
+        /// </summary>
+        public static readonly CollectionDef[] All = System.Array.FindAll(Catalog,
+            c => PlantBreeding.Garden.PlantAilments.Enabled || c.goal != CollectionGoal.CureAilment);
+
+        public static CollectionDef Get(string id)
+        {
+            foreach (var c in All)
+                if (c.id == id) return c;
+            return null;
+        }
+
+        /// <summary>Особиста вітрина — плейсхолдер макета (без прогресу й нагороди).</summary>
         public static readonly List<SlotDef> Showcase = new List<SlotDef>
         {
             new SlotDef("rose", true), new SlotDef("gold", true),
@@ -190,14 +144,49 @@ namespace PlantBreeding.Collections
         };
     }
 
-    /// <summary>Один слот колекції. rarity ∈ green|gold|rose|blue|violet|lock.</summary>
+    public class CollectionDef
+    {
+        public readonly string id;
+        public readonly string name;
+        public readonly CollectionGroup group;
+        public readonly CollectionGoal goal;
+        public readonly string accent; // green|gold|rose|blue|violet
+        public readonly string desc;
+        public readonly string hint;
+        /// <summary>Ключі слотів; null — усі види з PlantCatalog (див. CollectionService.SlotKeys).</summary>
+        public readonly string[] slotKeys;
+        public readonly CollectionReward reward;
+
+        public CollectionDef(string id, string name, CollectionGroup group, CollectionGoal goal, string accent,
+            string desc, string hint, string[] slotKeys, CollectionReward reward)
+        {
+            this.id = id; this.name = name; this.group = group; this.goal = goal; this.accent = accent;
+            this.desc = desc; this.hint = hint; this.slotKeys = slotKeys; this.reward = reward;
+        }
+    }
+
+    public class CollectionReward
+    {
+        public int gems;
+        public int coins;
+        public string avatarId;
+        public string frameId;
+        public string potId;
+        public string titleId;
+        public CollectionBonusKind bonus;
+        public float bonusValue;
+    }
+
+    // ── Моделі відображення для DexScreenController ─────────────────────────
+
+    /// <summary>Один слот колекції. rarity ∈ green|gold|rose|blue|violet|lock|add.</summary>
     public class SlotDef
     {
         public string rarity;
-        public bool done;         // вид відкрито хоч раз (заповнений назавжди)
-        public string name;       // для розгорнутого слота (детальний екран)
-        public string tier;       // напр. "лвл 2" / "золота"
-        public string sub;        // напр. "зібрано 3×"
+        public bool done;
+        public string name;  // для розгорнутого слота (детальний екран)
+        public string tier;  // пігулка в кутку, напр. "рідкісна"
+        public string sub;   // підпис знизу, напр. "зібрано 3×"
 
         public SlotDef(string rarity, bool done, string name = null, string tier = null, string sub = null)
         {
@@ -206,27 +195,13 @@ namespace PlantBreeding.Collections
         }
     }
 
-    public class WeekDef
-    {
-        public string title, desc, endsIn, count;
-        public int pct;
-        public List<SlotDef> slots;
-    }
-
-    /// <summary>Розгорнута колекція (екран B макета) — повний список слотів.</summary>
+    /// <summary>Розгорнута колекція (деталь-оверлей) — повний список слотів.</summary>
     public class DetailDef
     {
+        public string collectionId; // null — колекція тижня
         public string typeLabel, name, count, intro, hint, claimLabel;
         public int pct;
+        public bool claimable, claimed;
         public List<SlotDef> slots;
-    }
-
-    public class CollectionDef
-    {
-        public string id, name, typeLabel, accent, desc, count, reward;
-        public int pct;
-        public bool claim;        // action == claim (100%)
-        public List<SlotDef> miniSlots;
-        public DetailDef detail;
     }
 }

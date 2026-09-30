@@ -3,6 +3,7 @@ using PlantBreeding.Collections;
 using PlantBreeding.Economy;
 using PlantBreeding.Localization;
 using PlantBreeding.Notifications;
+using PlantBreeding.Shop;
 using PlantBreeding.Theme;
 
 namespace PlantBreeding.Core
@@ -40,10 +41,13 @@ namespace PlantBreeding.Core
 
             Save.SaveSystem.Load(playerData);
             GameClock.Init(playerData);
+            if (playerData.firstLaunchUnixSeconds <= 0) playerData.firstLaunchUnixSeconds = GameClock.NowUnixSeconds; // вікно «Стартового» набору
             ApplySettings();
             EnsureStarterInventory();
             SyncPrestigeFrames();
             EconomyService.RollDay(playerData);
+            ShopService.GrantClubDaily();
+            StoreGateway.Init(); // In-App Purchase: ціни, незавершені покупки, стан підписки
             StartCoroutine(GameClock.Sync(OnClockSynced));
 
             GameNotifications.Init();
@@ -66,7 +70,11 @@ namespace PlantBreeding.Core
         }
 
         /// <summary>Мережевий час міг показати, що вже інший день (годинник пристрою відставав).</summary>
-        private void OnClockSynced() => EconomyService.RollDay(playerData);
+        private void OnClockSynced()
+        {
+            EconomyService.RollDay(playerData);
+            ShopService.GrantClubDaily();
+        }
 
         private void EnsureStarterInventory()
         {
@@ -120,6 +128,8 @@ namespace PlantBreeding.Core
 
         public string GetRankLabel()
         {
+            // Титул з колекції Дендрарію (напр. «Ботанік») важливіший за звання рівня.
+            if (!string.IsNullOrEmpty(playerData.activeTitleId)) return playerData.activeTitleId;
             switch (GetPrestigeTier())
             {
                 case "spark": return "Легендарний садівник";
@@ -132,7 +142,7 @@ namespace PlantBreeding.Core
         /// <summary>
         /// Авто-видає рамки grey/green/gold, щойно гравець досяг відповідного
         /// рівня престижу (реальний, тестований шлях розблокування — на
-        /// відміну від "spark", яка чекає на Завдання тижня). Ідемпотентно,
+        /// відміну від "spark", яку видає колекція «Ботанік»). Ідемпотентно,
         /// викликати після Load і після кожної зміни рівня.
         /// </summary>
         public void SyncPrestigeFrames()
@@ -225,8 +235,7 @@ namespace PlantBreeding.Core
             playerData.discoveredPlantIds.Add(plantId);
             playerData.unseenDexCount++; // кружечок з числом на іконці Дендрарію
             Save.SaveSystem.Save(playerData);
-            PlantCollections.OnPlantDiscovered(plantId); // прогрес колекцій, +1 кристал за зібрану
-            GameEvents.RaiseDexBadgeChanged();
+            CollectionService.OnPlantDiscovered(plantId); // прогрес колекцій + бейдж Дендрарію
         }
 
         /// <summary>Гравець відкрив Дендрарій — бейдж нових рослин зникає.</summary>
@@ -258,6 +267,7 @@ namespace PlantBreeding.Core
             if (IsPotOwned(potId)) return true;
             if (!TrySpendCoins(cost)) return false;
             playerData.ownedPotIds.Add(potId);
+            CollectionService.OnPotOwned(potId); // «Колекція горщиків»
             return true;
         }
 
@@ -290,6 +300,7 @@ namespace PlantBreeding.Core
                 GameNotifications.OnAppForeground();
                 ThemeService.Refresh(); // «як у системі»: тема пристрою могла змінитись
                 EconomyService.RollDay(playerData); // повернення з фону після півночі = новий день
+                ShopService.GrantClubDaily();
                 StartCoroutine(GameClock.Sync(OnClockSynced));
             }
         }

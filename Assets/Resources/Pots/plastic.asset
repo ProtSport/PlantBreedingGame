@@ -19,6 +19,7 @@ MonoBehaviour:
   sellPriceBonus: 0
   waterIntervalBonus: 0
   ailmentResistance: 0
+  xpBonus: 0
   effectLabel: "\u0431\u0435\u0437 \u0431\u043E\u043D\u0443\u0441\u0443"
   colorTop: {r: 0.6509804, g: 0.6862745, b: 0.6392157, a: 1}
   colorMid: {r: 0.5176471, g: 0.5529412, b: 0.5058824, a: 1}
@@ -27,3 +28,4 @@ MonoBehaviour:
   colorStroke: {r: 0.24313726, g: 0.26666668, b: 0.23529412, a: 1}
   premiumVisual: 0
   unlockCost: 0
+  rewardSource: 

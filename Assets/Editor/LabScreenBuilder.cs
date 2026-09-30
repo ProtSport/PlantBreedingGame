@@ -84,8 +84,10 @@ namespace PlantBreeding.EditorTools
             controller.sprGlow = LoadSprite("glow");
             controller.sprIconBolt = LoadSprite("icon-bolt");
             controller.sprIconHeart = LoadSprite("icon-heart");
+            controller.sprIconStar = LoadSprite("icon-star");
             controller.sprIconCoin = LoadSprite("icon-coin", SvgDir);
             controller.sprIconCheck = LoadSprite("icon-check");
+            controller.sprIconLock = LoadSprite("icon-lock", SvgDir);
 
             // Єдина шапка всіх екранів (HeaderView); монети/кристали оновлює вона.
             BuildStandardHeader(root, withBack: false, out _);
@@ -190,7 +192,7 @@ namespace PlantBreeding.EditorTools
             HomeScreenBuilder.MakeNavItem(nav.transform, "nav-garden", "Сад", false, "Lab", SceneNavButton.NavAction.CloseScene);
             HomeScreenBuilder.MakeNavItem(nav.transform, "nav-lab", "Лабораторія", true, null, SceneNavButton.NavAction.OpenAdditive);
             HomeScreenBuilder.MakeNavItem(nav.transform, "nav-dex", "Дендрарій", false, "Dex", SceneNavButton.NavAction.OpenAdditive);
-            HomeScreenBuilder.MakeNavItem(nav.transform, "nav-shop", "Крамниця", false, null, SceneNavButton.NavAction.OpenAdditive);
+            HomeScreenBuilder.MakeNavItem(nav.transform, "nav-shop", "Крамниця", false, SceneNavButton.ShopScene, SceneNavButton.NavAction.OpenAdditive);
         }
     }
 }

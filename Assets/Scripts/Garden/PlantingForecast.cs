@@ -1,4 +1,5 @@
 using UnityEngine;
+using PlantBreeding.Collections;
 using PlantBreeding.Core;
 using PlantBreeding.Lab;
 
@@ -28,7 +29,8 @@ namespace PlantBreeding.Garden
 
     /// <summary>
     /// Прогноз результату посадки: час росту (рослина + горщик + добриво +
-    /// Лабораторія) і ціна продажу (рослина + бонус горщика + Лабораторія).
+    /// Лабораторія) і ціна продажу (рослина + бонус горщика + Лабораторія +
+    /// бонус колекції Дендрарію + підписка «Клуб садівника»).
     /// Мутацій/схрещування на цьому етапі немає.
     /// </summary>
     public static class PlantingForecast
@@ -45,14 +47,16 @@ namespace PlantBreeding.Garden
             return new ForecastResult(growTime, SellPriceWithBonuses(plant, pot));
         }
 
-        /// <summary>Ціна продажу з бонусом горщика і Лабораторії (полив додається при зборі).</summary>
+        /// <summary>Ціна продажу з бонусом горщика, Лабораторії і колекцій (полив додається при зборі).</summary>
         public static int SellPriceWithBonuses(PlantData plant, PotData pot)
         {
             float lab = GameManager.Instance != null
                 ? LabResearchService.GetYieldPriceBonus(GameManager.Instance.playerData)
                 : 0f;
             float potBonus = pot != null ? pot.sellPriceBonus : 0f;
-            return Mathf.RoundToInt(PlantEconomy.SellPrice(plant) * (1f + lab + potBonus));
+            float collection = CollectionService.SellPriceBonus(plant.plantId);
+            float club = Shop.ShopService.ClubSellBonus; // «Клуб садівника»: +10%
+            return Mathf.RoundToInt(PlantEconomy.SellPrice(plant) * (1f + lab + potBonus + collection + club));
         }
     }
 }

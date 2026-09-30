@@ -49,8 +49,9 @@ namespace PlantBreeding.EditorTools
             Build();
             LabScreenBuilder.Build();
             DexScreenBuilder.Build();
+            ShopScreenBuilder.Build();
             ProfileScreenBuilder.Build();
-            Debug.Log("[PlantBreeding] Усе зібрано: контент, сад, посадка, лабораторія, дендрарій, профіль.");
+            Debug.Log("[PlantBreeding] Усе зібрано: контент, сад, посадка, лабораторія, дендрарій, крамниця, профіль.");
         }
 
         static void AddSceneToBuildSettingsAdditive()
@@ -258,12 +259,16 @@ namespace PlantBreeding.EditorTools
             Place((RectTransform)columns.transform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(82, 0), new Vector2(260, 60));
             var chl = columns.AddComponent<HorizontalLayoutGroup>();
             chl.spacing = 16; chl.childAlignment = TextAnchor.MiddleLeft;
-            chl.childControlWidth = false; chl.childControlHeight = true;
+            // Обидва control=true + forceExpand=false — інакше LayoutElement-розміри
+            // ігноруються: Divider ставав 100px завширшки (колонка «монет» з'їжджала
+            // праворуч), а колонки — 0px заввишки (текст вилазив під картку).
+            chl.childControlWidth = true; chl.childControlHeight = true;
             chl.childForceExpandWidth = false; chl.childForceExpandHeight = false;
 
             var (growLbl, growNote) = BuildForecastColumn(columns.transform, "год", ColText, 100);
             var div = MakeImage("Divider", columns.transform, null, Rgba(Color.white, 0.12f), Image.Type.Simple);
-            div.gameObject.AddComponent<LayoutElement>().preferredWidth = 1;
+            var divLe = div.gameObject.AddComponent<LayoutElement>();
+            divLe.preferredWidth = 1; divLe.preferredHeight = 44;
             var (sellLbl, sellNote) = BuildForecastColumn(columns.transform, "монет", ColGoldLt, 100);
 
             var plantBtn = MakeImage("PlantButton", bar.transform, LoadSprite("rounded-16"), ColGreenBr, Image.Type.Sliced);
@@ -296,7 +301,9 @@ namespace PlantBreeding.EditorTools
         {
             var col = new GameObject("Col_" + unit, typeof(RectTransform), typeof(LayoutElement));
             col.transform.SetParent(parent, false);
-            col.GetComponent<LayoutElement>().preferredWidth = width;
+            var colLe = col.GetComponent<LayoutElement>();
+            colLe.preferredWidth = width;
+            colLe.preferredHeight = 60; // Value 26 + Unit 16 + Note 14 (див. офсети нижче)
 
             // Офсети рахуються від висоти елемента ВИЩЕ (26/16/14), інакше великий
             // Value-текст (22pt) заходить на Unit під ним — саме це й "з'їжджало".

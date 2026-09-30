@@ -100,6 +100,9 @@ namespace PlantBreeding.UI
         private PotData _selectedPot;
         private StarterBoostKind _selectedBoost = StarterBoostKind.None;
 
+        private void OnEnable() => Shop.ShopService.Changed += RefreshVisuals; // горщик куплено в Крамниці
+        private void OnDisable() => Shop.ShopService.Changed -= RefreshVisuals;
+
         private void Start()
         {
             if (PlantingRequest.TargetSlot == null)
@@ -128,6 +131,7 @@ namespace PlantBreeding.UI
 
             _pots = Resources.LoadAll<PotData>("Pots")
                 .OrderBy(p => (int)p.rarity)
+                .ThenBy(p => p.IsRewardOnly ? int.MaxValue : p.unlockCost)
                 .ToList();
         }
 
@@ -293,13 +297,18 @@ namespace PlantBreeding.UI
             var gm = GameManager.Instance;
             if (gm == null) return;
 
-            bool owned = pot.unlockCost <= 0 || gm.IsPotOwned(pot.potId);
+            bool owned = IsPotOwned(pot);
             if (owned)
             {
                 _selectedPot = pot;
                 gm.SetLastUsedPot(pot.potId);
             }
-            else if (gm.TryUnlockPot(pot.potId, pot.unlockCost))
+            else if (pot.IsShopPot)
+            {
+                SceneNavButton.OpenTab(SceneNavButton.ShopScene); // преміум-горщик — у Крамниці
+                return;
+            }
+            else if (!pot.IsRewardOnly && gm.TryUnlockPot(pot.potId, pot.unlockCost))
             {
                 _selectedPot = pot;
             }
@@ -356,15 +365,17 @@ namespace PlantBreeding.UI
             foreach (var h in _potCards)
             {
                 bool selected = _selectedPot == h.pot;
-                bool owned = h.pot.unlockCost <= 0 || (gm != null && gm.IsPotOwned(h.pot.potId));
-                bool canUnlock = !owned && gm != null && gm.playerData.coins >= h.pot.unlockCost;
+                bool owned = IsPotOwned(h.pot);
+                bool canUnlock = !owned && !h.pot.IsRewardOnly && gm != null && gm.playerData.coins >= h.pot.unlockCost;
 
-                ApplyCardStyle(h.bg, h.border, h.group, selected, gold: h.pot.premiumVisual && !selected, interactable: owned || canUnlock);
+                ApplyCardStyle(h.bg, h.border, h.group, selected, gold: h.pot.premiumVisual && !selected, interactable: owned || canUnlock || h.pot.IsShopPot);
 
                 string gold = ColorUtility.ToHtmlStringRGB(UIColors.GoldLt);
                 h.effect.text = owned
                     ? h.pot.effectLabel
-                    : $"{h.pot.effectLabel}\n<color=#{gold}>Купити · {h.pot.unlockCost}</color>";
+                    : h.pot.IsRewardOnly
+                        ? $"{h.pot.effectLabel}\n<color=#{gold}>{h.pot.rewardSource}</color>"
+                        : $"{h.pot.effectLabel}\n<color=#{gold}>Купити · {h.pot.unlockCost}</color>";
                 h.effect.color = h.pot.growTimeModifier != 0f ? UIColors.Green : UIColors.Soft;
             }
 
@@ -379,8 +390,18 @@ namespace PlantBreeding.UI
             RefreshForecast();
         }
 
+        /// <summary>Стартовий (безкоштовний) або вже куплений/отриманий з колекції.</summary>
+        private static bool IsPotOwned(PotData pot) =>
+            (pot.unlockCost <= 0 && !pot.IsRewardOnly)
+            || (GameManager.Instance != null && GameManager.Instance.IsPotOwned(pot.potId));
+
+        /// <summary>
+        /// Вид ще не відкрито за рівнем — але насіння з Насіннєвої капсули
+        /// (Shop/SeedCapsule) дозволяє посадити його раніше.
+        /// </summary>
         private static bool IsLevelLocked(PlantData plant) =>
-            GameManager.Instance != null && plant.unlockLevel > GameManager.Instance.playerData.level;
+            GameManager.Instance != null && plant.unlockLevel > GameManager.Instance.playerData.level
+            && GameManager.Instance.GetSeedCount(plant.plantId) <= 0;
 
         private static void ApplyCardStyle(Image bg, Image border, CanvasGroup group, bool selected, bool gold, bool interactable)
         {

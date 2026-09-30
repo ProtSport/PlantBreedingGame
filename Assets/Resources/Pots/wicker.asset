@@ -18,9 +18,9 @@ MonoBehaviour:
   growTimeModifier: -0.08
   sellPriceBonus: 0
   waterIntervalBonus: 0
-  ailmentResistance: 0.25
-  effectLabel: "\u22128% \u0447\u0430\u0441\u0443 \u0440\u043E\u0441\u0442\u0443\n\u221225%
-    \u0445\u0432\u043E\u0440\u043E\u0431"
+  ailmentResistance: 0
+  xpBonus: 0.05
+  effectLabel: "\u22128% \u0447\u0430\u0441\u0443 \u0440\u043e\u0441\u0442\u0443\n+5% XP"
   colorTop: {r: 0.8901961, g: 0.76862746, b: 0.5568628, a: 1}
   colorMid: {r: 0.76862746, g: 0.6039216, b: 0.36862746, a: 1}
   colorBottom: {r: 0.5568628, g: 0.41568628, b: 0.21960784, a: 1}
@@ -28,3 +28,4 @@ MonoBehaviour:
   colorStroke: {r: 0.43137255, g: 0.30588236, b: 0.14901961, a: 1}
   premiumVisual: 0
   unlockCost: 550
+  rewardSource: 

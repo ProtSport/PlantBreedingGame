@@ -61,7 +61,9 @@ namespace PlantBreeding.Notifications
             var args = NotificationCenterArgs.Default;
             args.AndroidChannelId = ChannelId;
             args.AndroidChannelName = "Сад";
-            args.AndroidChannelDescription = "Урожай, хвороби рослин і щоденні нагороди";
+            args.AndroidChannelDescription = PlantAilments.Enabled
+                ? "Урожай, хвороби рослин і щоденні нагороди"
+                : "Урожай і щоденні нагороди";
             args.PresentationOptions = NotificationPresentation.Alert | NotificationPresentation.Badge | NotificationPresentation.Sound;
             NotificationCenter.Initialize(args);
             _initialized = true;

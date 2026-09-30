@@ -45,8 +45,10 @@ namespace PlantBreeding.UI
         public Sprite sprGlow;
         public Sprite sprIconBolt;
         public Sprite sprIconHeart;
+        public Sprite sprIconStar;
         public Sprite sprIconCoin;
         public Sprite sprIconCheck;
+        public Sprite sprIconLock;
         public TMP_FontAsset fontHead;
         public TMP_FontAsset fontUi;
 
@@ -298,10 +300,9 @@ namespace PlantBreeding.UI
             var lockGroup = new GameObject("Lock", typeof(RectTransform));
             lockGroup.transform.SetParent(circle.transform, false);
             Stretch((RectTransform)lockGroup.transform);
-            var lockBody = MakeImage(lockGroup.transform, "Body", sprRoundedSmall, Rgba(Color.white, 0.28f), Image.Type.Sliced);
-            Place(lockBody.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -2), new Vector2(13, 10));
-            var lockShackle = MakeImage(lockGroup.transform, "Shackle", sprCircleLine, Rgba(Color.white, 0.34f), Image.Type.Simple);
-            Place(lockShackle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 6), new Vector2(11, 11));
+            var lockIcon = MakeImage(lockGroup.transform, "Icon", sprIconLock, Rgba(Color.white, 0.34f), Image.Type.Simple);
+            lockIcon.preserveAspect = true;
+            Place(lockIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(16, 16));
             lockGroup.SetActive(false);
             node.lockGroup = lockGroup;
 
@@ -633,6 +634,7 @@ namespace PlantBreeding.UI
         {
             LabBranchId.Speed => sprIconBolt,
             LabBranchId.Health => sprIconHeart,
+            LabBranchId.Xp => sprIconStar,
             _ => sprIconCoin,
         };
 

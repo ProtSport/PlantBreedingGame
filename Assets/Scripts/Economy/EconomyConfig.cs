@@ -64,16 +64,7 @@ namespace PlantBreeding.Economy
         public static int SpeedUpGemCost(double remainingSeconds) =>
             System.Math.Max(1, (int)System.Math.Ceiling(remainingSeconds / 3600.0 / SpeedUpHoursPerGem));
 
-        // ── Крамниця кристалів ───────────────────────────────────────────
-        // Ціни — плейсхолдер для UI; реальні ціни прийдуть з Google Play /
-        // App Store, коли підключимо IAP (GemStore).
-        public static readonly GemPack[] GemPacks =
-        {
-            new GemPack("gems_10", 10, "49 грн", ""),
-            new GemPack("gems_30", 30, "129 грн", "+10%"),
-            new GemPack("gems_80", 80, "299 грн", "+25%"),
-            new GemPack("gems_200", 200, "649 грн", "вигідно"),
-        };
+        // Пакети кристалів та інші товари за реальні гроші — Shop/ShopCatalog.
 
         // ── Щоденна нагорода за вхід (7-денний цикл) ─────────────────────
         // Пропустив день → стрік починається з Дня 1. Монети множаться на
@@ -127,19 +118,4 @@ namespace PlantBreeding.Economy
         }
     }
 
-    public readonly struct GemPack
-    {
-        public readonly string productId;
-        public readonly int gems;
-        public readonly string priceLabel;
-        public readonly string badge;
-
-        public GemPack(string productId, int gems, string priceLabel, string badge)
-        {
-            this.productId = productId;
-            this.gems = gems;
-            this.priceLabel = priceLabel;
-            this.badge = badge;
-        }
-    }
 }

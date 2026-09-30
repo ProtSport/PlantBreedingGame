@@ -212,6 +212,14 @@ namespace PlantBreeding.Lab
             return LabResearchCatalog.GetNode(LabBranchId.Yield, completed - 1).magnitude;
         }
 
+        /// <summary>Бонус до XP за врожай (гілка «Досвід»), той самий формат, що PotData.xpBonus.</summary>
+        public static float GetXpBonus(PlayerData data)
+        {
+            int completed = GetCompletedLevels(data, LabBranchId.Xp);
+            if (completed <= 0) return 0f;
+            return LabResearchCatalog.GetNode(LabBranchId.Xp, completed - 1).magnitude;
+        }
+
         // ── Здоров'я (хвороби/шкідники — Garden/PlantAilments) ───────────
         /// <summary>Зниження шансу хвороби/шкідника: вузол 1 = −10%, вузол 2+ = −20%.</summary>
         public static float GetHealthAilmentReduction(PlayerData data)

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using PlantBreeding.Collections;
 using PlantBreeding.Core;
 using PlantBreeding.Economy;
 
@@ -80,9 +81,22 @@ namespace PlantBreeding.Garden
 
         private bool HasPendingAilment => ailment != AilmentKind.None && ailmentAtFraction >= 0f && state != PlotState.Sick;
 
-        /// <summary>Інтервал спраги з урахуванням горщика.</summary>
+        /// <summary>Інтервал спраги з урахуванням горщика і бонусу колекції («Сукуленти»).</summary>
         private double WaterIntervalSeconds =>
-            plant.waterDepleteSeconds * (1f + (pot != null ? pot.waterIntervalBonus : 0f));
+            plant.waterDepleteSeconds * (1f + (pot != null ? pot.waterIntervalBonus : 0f)
+                                            + CollectionService.WaterIntervalBonus(plant.plantId));
+
+        /// <summary>
+        /// «Ідеальний догляд» (колекція): полито стільки разів, скільки рослина
+        /// могла попросити за свій ріст (з 10% запасу на останній полив).
+        /// Рослини, що ростуть коротше за інтервал спраги, рахуються одразу.
+        /// </summary>
+        private bool IsPerfectCare()
+        {
+            int expected = Mathf.Min(EconomyConfig.MaxCareWaterings,
+                Mathf.FloorToInt((float)(effectiveGrowTimeSeconds / WaterIntervalSeconds * 0.9)));
+            return wateredCount >= expected;
+        }
 
         /// <summary>Викликається періодично GardenManager'ом (напр. раз на секунду).</summary>
         public void Tick()
@@ -150,7 +164,7 @@ namespace PlantBreeding.Garden
             SetState(PlotState.Growing);
             GameManager.Instance?.AddXp(EconomyConfig.WaterXp);
             EconomyService.Track(DailyTaskKind.Water, 1);
-            GameEvents.RaiseToast($"Полито! +{Mathf.RoundToInt(EconomyConfig.CareBonusPerWatering * 100f)}% до ціни врожаю");
+            GameEvents.RaiseToast($"Полито! +{Mathf.RoundToInt(CollectionService.CareBonusPerWatering * 100f)}% до ціни врожаю");
         }
 
         // ── Хвороби/шкідники ─────────────────────────────────────────────
@@ -184,9 +198,11 @@ namespace PlantBreeding.Garden
                 plantedAtUtc += paused;
                 lastWateredUtc += paused;
             }
+            var cured = ailment;
             ClearAilment();
             SetState(PlotState.Growing);
             EconomyService.Track(DailyTaskKind.Cure, 1);
+            CollectionService.OnAilmentCured(cured); // «Лікар рослин»
             Tick();
         }
 
@@ -205,6 +221,7 @@ namespace PlantBreeding.Garden
             var harvested = plant;
             var harvestedPot = pot;
             int watered = wateredCount;
+            bool perfectCare = IsPerfectCare();
             plant = null;
             pot = null;
             boost = StarterBoostKind.None;
@@ -212,7 +229,7 @@ namespace PlantBreeding.Garden
             speedUpUsed = false;
             ClearAilment();
             SetState(PlotState.Empty);
-            return EconomyService.GrantHarvest(harvested, harvestedPot, watered, silent);
+            return EconomyService.GrantHarvest(harvested, harvestedPot, watered, perfectCare, silent);
         }
 
         /// <summary>Скільки секунд росту вже зараховано (під час хвороби — заморожено).</summary>
@@ -292,6 +309,23 @@ namespace PlantBreeding.Garden
                 ? saved
                 : PlotState.Growing;
             if (state == PlotState.Sick && ailment == AilmentKind.None) state = PlotState.Growing;
+
+            // Хвороби вимкнені (PlantAilments.Enabled) — зняти те, що лишилось зі старого
+            // збереження. Хвора рослина продовжує рости з того ж місця, як після Cure().
+            if (!PlantAilments.Enabled && ailment != AilmentKind.None)
+            {
+                if (state == PlotState.Sick)
+                {
+                    TimeSpan paused = GameClock.UtcNow - sickSinceUtc;
+                    if (paused > TimeSpan.Zero)
+                    {
+                        plantedAtUtc += paused;
+                        lastWateredUtc += paused;
+                    }
+                    state = PlotState.Growing;
+                }
+                ClearAilment();
+            }
         }
 
         private static double ToUnix(DateTime utc) =>

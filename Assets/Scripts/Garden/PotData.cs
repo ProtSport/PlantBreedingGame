@@ -34,6 +34,8 @@ namespace PlantBreeding.Garden
         public float waterIntervalBonus = 0f;
         [Tooltip("Зниження шансу хвороби/шкідника, напр. 0.25 = −25%")]
         public float ailmentResistance = 0f;
+        [Tooltip("Бонус до XP за врожай, напр. 0.10 = +10%")]
+        public float xpBonus = 0f;
         [Tooltip("Короткий підпис ефекту для картки (2 рядки), напр. \"−5% часу\\nполив рідше\"")]
         public string effectLabel = "без бонусу";
 
@@ -50,5 +52,15 @@ namespace PlantBreeding.Garden
         [Tooltip("Ціна одноразового розблокування за монети (0 = стартовий, завжди безкоштовний). " +
                  "Після покупки горщик лишається в гравця назавжди.")]
         public int unlockCost = 0;
+        [Tooltip("Не продається: видається нагородою колекції Дендрарію (підпис — звідки взяти). " +
+                 "Порожньо — звичайний горщик за unlockCost.")]
+        public string rewardSource = "";
+
+        public bool IsRewardOnly => !string.IsNullOrEmpty(rewardSource);
+
+        /// <summary>Підпис rewardSource преміум-горщиків, що продаються в Крамниці за реальні гроші.</summary>
+        public const string ShopSource = "Крамниця";
+
+        public bool IsShopPot => rewardSource == ShopSource;
     }
 }

@@ -12,6 +12,11 @@
 *.mdb.meta
 *.apk
 *.aab
+
+# Ключ підпису Android і його паролі — НІКОЛИ не в git (резервна копія — у менеджері паролів)
+[Kk]eystore/
+*.keystore
+*.jks
 *.unitypackage
 *.app
 
@@ -30,3 +35,10 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Unity temp
+.utmp/
+
+# Performance Testing: генерується під час збірки
+Assets/Resources/PerformanceTestRun*.json
+Assets/Resources/PerformanceTestRun*.json.meta

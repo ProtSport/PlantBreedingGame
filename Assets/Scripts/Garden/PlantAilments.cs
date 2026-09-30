@@ -1,4 +1,5 @@
 using UnityEngine;
+using PlantBreeding.Collections;
 using PlantBreeding.Core;
 using PlantBreeding.Lab;
 
@@ -46,6 +47,14 @@ namespace PlantBreeding.Garden
     /// </summary>
     public static class PlantAilments
     {
+        /// <summary>
+        /// Хвороби й шкідники вимкнені до STG 2 (docs/RELEASE-PLAN.md): рослини не
+        /// хворіють, а вже заплановані/поточні хвороби зі старих збережень знімаються
+        /// при завантаженні. Щоб повернути — true (плюс колекція «Лікар рослин»,
+        /// бонус «Зеленого листя» і щоденне «Вилікувати» вмикаються самі).
+        /// </summary>
+        public static readonly bool Enabled = false;
+
         public static readonly AilmentDef[] All =
         {
             new AilmentDef(AilmentKind.Aphids, "Тля", true,
@@ -82,16 +91,17 @@ namespace PlantBreeding.Garden
 
         /// <summary>
         /// Вирішує в момент посадки, чи буде хвороба і на якій частці росту (0.2…0.7).
-        /// Враховує горщик і гілку Лабораторії «Здоров'я».
+        /// Враховує горщик, гілку Лабораторії «Здоров'я» і бонус колекції «Зелене листя».
         /// </summary>
         public static (AilmentKind kind, float atFraction) RollAtPlanting(PlantData plant, PotData pot, float growSeconds)
         {
             var gm = GameManager.Instance;
-            if (gm == null || gm.playerData.totalHarvests < GraceHarvests) return (AilmentKind.None, -1f);
+            if (!Enabled || gm == null || gm.playerData.totalHarvests < GraceHarvests) return (AilmentKind.None, -1f);
 
             float chance = BaseChance(growSeconds)
                 * (1f - (pot != null ? pot.ailmentResistance : 0f))
-                * (1f - LabResearchService.GetHealthAilmentReduction(gm.playerData));
+                * (1f - LabResearchService.GetHealthAilmentReduction(gm.playerData))
+                * (1f - CollectionService.AilmentResist(plant.plantId));
             if (Random.value >= chance) return (AilmentKind.None, -1f);
 
             bool pestImmune = LabResearchService.HasPestImmunity(gm.playerData);

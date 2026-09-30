@@ -1,27 +1,28 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using PlantBreeding.Core;
 using PlantBreeding.Collections;
+using PlantBreeding.Garden;
 
 namespace PlantBreeding.UI
 {
     /// <summary>
-    /// Логіка екрану «Дендрарій · Колекції» (ТЗ «Дендрарій — тільки колекції»).
+    /// Логіка екрану «Дендрарій · Колекції» (docs/ECONOMY.md, «Колекції»).
     /// Assets/Editor/DexScreenBuilder.cs будує статичний каркас (шапка/скрол/
     /// деталь-оверлей/нижнє меню), цей скрипт наповнює список картками.
     ///
-    /// Каркасний прохід: дані колекцій — плейсхолдер із CollectionCatalog
-    /// (у грі поки лише вид rose_basic). Єдина «справжня» логіка — лічильник
-    /// «відкрито X з Y видів» рахується з реального реєстру
-    /// PlayerData.discoveredPlantIds (Pokédex, заповнюється в PlotSlot.Harvest).
+    /// Дані — реальні: каталог CollectionCatalog, прогрес і нагороди —
+    /// CollectionService (від PlayerData). Кнопка «Забрати» на картці або в
+    /// деталі видає нагороду колекції.
     ///
-    /// Картки/чіпи будуються ОДИН РАЗ у Start() і НІКОЛИ не знищуються (як у
-    /// PlantingScreenController/LabScreenController) — фільтр лише перемикає
-    /// SetActive вже існуючих карток. Деталь-оверлей — неклікабельний вміст,
-    /// тому його безпечно перебудовувати при кожному відкритті.
+    /// Картки/чіпи будуються в Start() і перебудовуються лише після отримання
+    /// нагороди (змінюється стан карток); фільтр лише перемикає SetActive.
+    /// Деталь-оверлей — неклікабельний вміст, його безпечно перебудовувати
+    /// при кожному відкритті.
     /// </summary>
     public class DexScreenController : MonoBehaviour
     {
@@ -73,9 +74,12 @@ namespace PlantBreeding.UI
         private readonly List<Image> _chipBgs = new List<Image>();
         private readonly List<TMP_Text> _chipLabels = new List<TMP_Text>();
         private TMP_Text _discoveryLabel;
+        private DetailDef _openDetail;
         private int _activeChip;
         private float _tick;
         private float _toastTimer;
+
+        private static PlayerData Data => GameManager.Instance != null ? GameManager.Instance.playerData : null;
 
         // ════════════════════════════════════════════════════════════════
         private void Start()
@@ -107,7 +111,7 @@ namespace PlantBreeding.UI
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  ПОБУДОВА СПИСКУ (один раз)
+        //  ПОБУДОВА СПИСКУ
         // ════════════════════════════════════════════════════════════════
         private void BuildList()
         {
@@ -116,12 +120,16 @@ namespace PlantBreeding.UI
             _chipBgs.Clear();
             _chipLabels.Clear();
 
+            var data = Data;
+            if (data != null) CollectionService.EnsureWeek(data);
+
             BuildDiscoveryRow(listContent);
             BuildWeekCard(listContent);
             BuildChipsRow(listContent);
 
-            foreach (var def in CollectionCatalog.Collections)
-                _cards.Add(BuildCollectionCard(listContent, def));
+            if (data != null)
+                foreach (var def in CollectionCatalog.All)
+                    _cards.Add(BuildCollectionCard(listContent, data, def));
 
             BuildShowcaseCard(listContent);
         }
@@ -148,17 +156,17 @@ namespace PlantBreeding.UI
         }
 
         // ── Картка тижня (золота рамка + таймер) АБО заглушка-гейт ─────────
-        // (ТЗ п.7: тема тижня доступна лише коли гравець відкрив 4+ видів)
+        // (тема тижня доступна лише коли гравець відкрив 4+ видів)
         private void BuildWeekCard(Transform parent)
         {
-            var gm = GameManager.Instance;
-            var discoveredIds = gm != null ? gm.playerData.discoveredPlantIds : null;
-            var week = CollectionCatalog.GetWeeklyCollection(discoveredIds);
-            if (week == null)
+            var data = Data;
+            if (data == null || !CollectionService.HasWeek(data))
             {
                 BuildWeekLockedCard(parent);
                 return;
             }
+
+            var week = WeekDetail(data);
 
             var card = new GameObject("WeekCard", typeof(RectTransform), typeof(Image),
                 typeof(VerticalLayoutGroup), typeof(LayoutElement), typeof(ContentSizeFitter));
@@ -183,30 +191,31 @@ namespace PlantBreeding.UI
             var flame = MakeLabel(top.transform, "Kicker", "Колекція тижня", fontHead, 22, ColGoldLt, FontStyles.Normal);
             flame.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             flame.alignment = TextAlignmentOptions.MidlineLeft;
-            var timer = MakePill(top.transform, "⏱ " + week.endsIn, ColGold, Rgba(ColGold, 0.12f), Rgba(ColGold, 0.32f));
+            var timer = MakePill(top.transform, $"⏱ {CollectionService.WeekDaysLeft()} дн", ColGold, Rgba(ColGold, 0.12f), Rgba(ColGold, 0.32f));
             timer.fontSize = 11;
 
-            var title = MakeLabel(card.transform, "Title", week.title, fontHead, 20, ColText, FontStyles.Normal);
-            title.rectTransform.sizeDelta = new Vector2(0, 24);
-            title.alignment = TextAlignmentOptions.MidlineLeft;
-
-            var desc = MakeLabel(card.transform, "Desc", week.desc, fontUi, 12.5f, Hex("#A9B2A0"), FontStyles.Normal);
+            var desc = MakeLabel(card.transform, "Desc", "Збери врожай кожного з цих видів до кінця тижня.", fontUi, 12.5f, Hex("#A9B2A0"), FontStyles.Normal);
             desc.alignment = TextAlignmentOptions.TopLeft;
             AddFlexLabel(desc);
 
             BuildSlotRow(card.transform, week.slots, showCheck: true);
 
-            // Прогрес + кнопка "Переглянути"
+            // Прогрес + кнопка
             var progRow = MakeRow(card.transform, 44, 12);
-            var col = BuildProgressColumn(progRow.transform, "Прогрес", week.count, week.pct, ColGold, ColGold);
+            string left = week.claimed ? "Отримано" : week.claimable ? "Готово" : "Прогрес";
+            var col = BuildProgressColumn(progRow.transform, left, week.count, week.pct, ColGold, ColGold);
             col.GetComponent<LayoutElement>().flexibleWidth = 1;
-            var btn = MakeActionButton(progRow.transform, "Переглянути", claim: false);
-            var weekDetail = WeekDetail(week);
-            AddClick(card, () => OpenDetail(weekDetail));
-            btn.onClick.AddListener(() => OpenDetail(weekDetail));
+            var btn = MakeActionButton(progRow.transform, week.claimable ? "Забрати" : "Переглянути", week.claimable);
+            AddClick(card, () => OpenDetail(WeekDetail(Data)));
+            if (week.claimable) btn.onClick.AddListener(() => Claim(null));
+            else btn.onClick.AddListener(() => OpenDetail(WeekDetail(Data)));
+
+            var rewardLabel = MakeLabel(card.transform, "Reward", "Нагорода: " + CollectionService.DescribeWeekReward(data), fontUi, 12, Hex("#A9B2A0"), FontStyles.Normal);
+            rewardLabel.alignment = TextAlignmentOptions.MidlineLeft;
+            AddFlexLabel(rewardLabel);
         }
 
-        // ── Заглушка тижневої колекції, коли відкрито < 4 видів (ТЗ п.7) ───
+        // ── Заглушка тижневої колекції, коли відкрито < 4 видів ────────────
         private void BuildWeekLockedCard(Transform parent)
         {
             var card = new GameObject("WeekCardLocked", typeof(RectTransform), typeof(Image),
@@ -273,9 +282,12 @@ namespace PlantBreeding.UI
         }
 
         // ── Картка колекції ───────────────────────────────────────────────
-        private CardHandle BuildCollectionCard(Transform parent, CollectionDef def)
+        private CardHandle BuildCollectionCard(Transform parent, PlayerData data, CollectionDef def)
         {
             var r = GetRar(def.accent);
+            int have = CollectionService.Progress(data, def), total = CollectionService.Total(def);
+            bool claimable = CollectionService.CanClaim(data, def);
+            bool claimed = CollectionService.IsClaimed(data, def);
 
             var card = new GameObject("Coll_" + def.id, typeof(RectTransform), typeof(Image), typeof(Button),
                 typeof(VerticalLayoutGroup), typeof(LayoutElement), typeof(ContentSizeFitter));
@@ -291,7 +303,7 @@ namespace PlantBreeding.UI
             vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
             card.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var border = MakeImage(card.transform, "Border", sprRoundedCardLine, Rgba(Color.white, 0.10f), Image.Type.Sliced);
+            var border = MakeImage(card.transform, "Border", sprRoundedCardLine, claimable ? r.fill : Rgba(Color.white, 0.10f), Image.Type.Sliced);
             Stretch(border.rectTransform);
             border.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
 
@@ -310,20 +322,21 @@ namespace PlantBreeding.UI
             name.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             name.alignment = TextAlignmentOptions.MidlineLeft;
 
-            var typePill = MakePill(head.transform, def.typeLabel, r.fill, r.bg, r.border);
+            var typePill = MakePill(head.transform, GroupLabel(def.group), r.fill, r.bg, r.border);
             typePill.fontSize = 10.5f;
 
             var desc = MakeLabel(card.transform, "Desc", def.desc, fontUi, 12.5f, ColMut, FontStyles.Normal);
             desc.alignment = TextAlignmentOptions.TopLeft;
             AddFlexLabel(desc);
 
-            BuildSlotRow(card.transform, def.miniSlots, showCheck: false);
+            BuildSlotRow(card.transform, MiniSlots(data, def), showCheck: false);
 
             // Прогрес + кнопка
             var progRow = MakeRow(card.transform, 40, 12);
-            var col = BuildProgressColumn(progRow.transform, def.claim ? "Готово" : "Зібрано", def.count, def.pct, ColMut, r.fill);
+            string left = claimed ? "Отримано" : claimable ? "Готово" : "Зібрано";
+            var col = BuildProgressColumn(progRow.transform, left, $"{have}/{total}", Pct(have, total), ColMut, r.fill);
             col.GetComponent<LayoutElement>().flexibleWidth = 1;
-            var btn = MakeActionButton(progRow.transform, def.claim ? "Забрати" : "Переглянути", def.claim);
+            var btn = MakeActionButton(progRow.transform, claimable ? "Забрати" : "Переглянути", claimable);
 
             // Рядок нагороди
             var rewardRow = new GameObject("Reward", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(LayoutElement));
@@ -334,16 +347,15 @@ namespace PlantBreeding.UI
             rvl.childForceExpandWidth = true; rvl.childForceExpandHeight = false;
             var divider = MakeImage(rewardRow.transform, "Divider", null, Rgba(Color.white, 0.08f), Image.Type.Simple);
             divider.gameObject.AddComponent<LayoutElement>().preferredHeight = 1;
-            var rewardLabel = MakeLabel(rewardRow.transform, "Text", "Нагорода: " + def.reward, fontUi, 12, Hex("#A9B2A0"), FontStyles.Normal);
+            string rewardText = (claimed ? "Отримано: " : "Нагорода: ") + CollectionService.DescribeReward(def);
+            var rewardLabel = MakeLabel(rewardRow.transform, "Text", rewardText, fontUi, 12, claimed ? ColMut : Hex("#A9B2A0"), FontStyles.Normal);
             rewardLabel.alignment = TextAlignmentOptions.MidlineLeft;
             AddFlexLabel(rewardLabel);
 
-            var detail = def.detail;
-            AddClick(card, () => OpenDetail(detail));
-            if (def.claim)
-                btn.onClick.AddListener(() => OpenDetail(detail)); // «Забрати» відкриває деталь із claim-баром
-            else
-                btn.onClick.AddListener(() => OpenDetail(detail));
+            string id = def.id;
+            AddClick(card, () => OpenDetail(CollectionDetail(Data, CollectionCatalog.Get(id))));
+            if (claimable) btn.onClick.AddListener(() => Claim(id));
+            else btn.onClick.AddListener(() => OpenDetail(CollectionDetail(Data, CollectionCatalog.Get(id))));
 
             return new CardHandle { def = def, root = card };
         }
@@ -387,6 +399,7 @@ namespace PlantBreeding.UI
         private void OpenDetail(DetailDef d)
         {
             if (detailPanel == null || d == null) return;
+            _openDetail = d;
 
             if (detailKicker != null) detailKicker.text = d.typeLabel.ToUpper();
             if (detailTitle != null) detailTitle.text = d.name;
@@ -434,14 +447,14 @@ namespace PlantBreeding.UI
             AddFlexLabel(hintText);
 
             // Claim-бар
-            bool complete = d.pct >= 100;
-            if (detailClaimBg != null) detailClaimBg.color = complete ? ColGreenBright : Rgba(Color.white, 0.05f);
+            bool claimable = d.claimable;
+            if (detailClaimBg != null) detailClaimBg.color = claimable ? ColGreenBright : Rgba(Color.white, 0.05f);
             if (detailClaimLabel != null)
             {
-                detailClaimLabel.text = complete ? "Забрати нагороду" : d.claimLabel;
-                detailClaimLabel.color = complete ? Hex("#0E130C") : Hex("#7C8573");
+                detailClaimLabel.text = d.claimed ? "Нагороду отримано" : claimable ? "Забрати нагороду" : d.claimLabel;
+                detailClaimLabel.color = claimable ? Hex("#0E130C") : Hex("#7C8573");
             }
-            if (detailClaimButton != null) detailClaimButton.interactable = complete;
+            if (detailClaimButton != null) detailClaimButton.interactable = claimable;
 
             detailPanel.SetActive(true);
         }
@@ -483,8 +496,9 @@ namespace PlantBreeding.UI
             var name = MakeLabel(cell.transform, "Name", slot.name ?? "", fontHead, 18, done ? ColText : Hex("#6E7865"), FontStyles.Normal);
             Place(name.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 30), new Vector2(150, 22));
             name.alignment = TextAlignmentOptions.Center;
+            name.enableAutoSizing = true; name.fontSizeMin = 12; name.fontSizeMax = 18; // «Фікус Бенджаміна»
 
-            var sub = MakeLabel(cell.transform, "Sub", done ? (slot.sub ?? "") : "ще не відкрито", fontUi, 11, done ? ColMut : ColDim, FontStyles.Normal);
+            var sub = MakeLabel(cell.transform, "Sub", slot.sub ?? (done ? "" : "ще не відкрито"), fontUi, 11, done ? ColMut : ColDim, FontStyles.Normal);
             Place(sub.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 12), new Vector2(150, 16));
             sub.alignment = TextAlignmentOptions.Center;
         }
@@ -492,16 +506,35 @@ namespace PlantBreeding.UI
         private void CloseDetail()
         {
             if (detailPanel != null) detailPanel.SetActive(false);
+            _openDetail = null;
         }
 
         private void HandleClaimClick()
         {
-            // TODO: реальна видача нагороди + claimedSlotCount (ТЗ п.4) — з'явиться
-            // разом із CollectionService. Каркасний прохід лише підтверджує тап.
+            if (_openDetail != null && _openDetail.claimable) Claim(_openDetail.collectionId);
+        }
+
+        /// <summary>
+        /// Видає нагороду (collectionId == null — колекція тижня), перебудовує
+        /// список і, якщо деталь відкрита, оновлює її.
+        /// </summary>
+        private void Claim(string collectionId)
+        {
+            bool ok = collectionId == null ? CollectionService.ClaimWeek() : CollectionService.Claim(collectionId);
+            if (!ok) return;
             ShowToast("Нагороду отримано");
-            if (detailClaimLabel != null) detailClaimLabel.text = "Отримано";
-            if (detailClaimBg != null) detailClaimBg.color = Rgba(Color.white, 0.05f);
-            if (detailClaimButton != null) detailClaimButton.interactable = false;
+
+            BuildList();
+            ApplyChipFilter();
+            RefreshHeader();
+
+            if (detailPanel != null && detailPanel.activeSelf && _openDetail != null)
+            {
+                var data = Data;
+                OpenDetail(_openDetail.collectionId == null
+                    ? WeekDetail(data)
+                    : CollectionDetail(data, CollectionCatalog.Get(_openDetail.collectionId)));
+            }
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -509,7 +542,6 @@ namespace PlantBreeding.UI
         // ════════════════════════════════════════════════════════════════
         private void ApplyChipFilter()
         {
-            string filter = CollectionCatalog.Chips[_activeChip];
             for (int i = 0; i < _chipBgs.Count; i++)
             {
                 bool on = i == _activeChip;
@@ -519,7 +551,7 @@ namespace PlantBreeding.UI
 
             foreach (var card in _cards)
             {
-                bool show = _activeChip == 0 || card.def.typeLabel == filter;
+                bool show = _activeChip == 0 || (int)card.def.group == _activeChip - 1;
                 if (card.root != null) card.root.SetActive(show);
             }
         }
@@ -535,7 +567,8 @@ namespace PlantBreeding.UI
             {
                 int discovered = gm != null ? gm.DiscoveredSpeciesCount : 0;
                 int total = Mathf.Max(discovered, TotalSpeciesCount());
-                _discoveryLabel.text = $"Відкрито {discovered} з {total} видів · {CollectionCatalog.Collections.Count} колекцій";
+                int collected = data != null ? CollectionService.CompletedCount(data) : 0;
+                _discoveryLabel.text = $"Відкрито {discovered} з {total} видів · зібрано {collected} з {CollectionCatalog.All.Length} колекцій";
             }
         }
 
@@ -543,7 +576,7 @@ namespace PlantBreeding.UI
         private static int TotalSpeciesCount()
         {
             if (_cachedTotal < 0)
-                _cachedTotal = Resources.LoadAll<Garden.PlantData>("Plants").Length;
+                _cachedTotal = PlantCatalog.All.Count;
             return _cachedTotal;
         }
 
@@ -557,14 +590,146 @@ namespace PlantBreeding.UI
         // ════════════════════════════════════════════════════════════════
         //  ХЕЛПЕРИ ПОБУДОВИ
         // ════════════════════════════════════════════════════════════════
-        private DetailDef WeekDetail(WeekDef w) => new DetailDef
+        private static string GroupLabel(CollectionGroup group) =>
+            group == CollectionGroup.Theme ? "Тематичні" : "Майстерність";
+
+        private static int Pct(int have, int total) => total <= 0 ? 0 : Mathf.RoundToInt(100f * have / total);
+
+        private static string RarityKey(PlantRarity rarity) => rarity switch
         {
-            typeLabel = "Колекція тижня · " + w.endsIn, name = w.title, count = w.count, pct = w.pct,
-            intro = w.desc + " Незавершена до кінця тижня колекція обнуляється разом із заміною на нову (ТЗ п.4).",
-            hint = "Види тижня обираються з тих, що ти вже відкривав — це повторний збір, а не новий контент.",
-            claimLabel = "Забери до кінця тижня",
-            slots = w.slots,
+            PlantRarity.Rare => "blue",
+            PlantRarity.Epic => "violet",
+            PlantRarity.Legendary => "gold",
+            _ => "green",
         };
+
+        private static string RarityLabel(PlantRarity rarity) => rarity switch
+        {
+            PlantRarity.Rare => "рідкісна",
+            PlantRarity.Epic => "епічна",
+            PlantRarity.Legendary => "легендарна",
+            _ => "звичайна",
+        };
+
+        /// <summary>Розгорнута колекція з реальним прогресом гравця.</summary>
+        private DetailDef CollectionDetail(PlayerData data, CollectionDef def)
+        {
+            if (data == null || def == null) return null;
+            int have = CollectionService.Progress(data, def), total = CollectionService.Total(def);
+            return new DetailDef
+            {
+                collectionId = def.id,
+                typeLabel = GroupLabel(def.group),
+                name = def.name,
+                count = $"{have}/{total}",
+                pct = Pct(have, total),
+                intro = def.desc + "\n\nНагорода: " + CollectionService.DescribeReward(def),
+                hint = def.hint,
+                claimLabel = $"Забрати нагороду · ще {total - have}",
+                claimable = CollectionService.CanClaim(data, def),
+                claimed = CollectionService.IsClaimed(data, def),
+                slots = CollectionService.SlotKeys(def).Select(k => MakeSlot(data, def, k)).ToList(),
+            };
+        }
+
+        /// <summary>Колекція тижня: 4 відомі види, зараховуються врожаї цього тижня.</summary>
+        private DetailDef WeekDetail(PlayerData data)
+        {
+            if (data == null || !CollectionService.HasWeek(data)) return null;
+            int total = data.weekPlantIds.Count;
+            int have = data.weekPlantIds.Count(id => data.weekHarvestedIds.Contains(id));
+            var slots = data.weekPlantIds.Select(id =>
+            {
+                var p = PlantCatalog.Get(id);
+                bool done = data.weekHarvestedIds.Contains(id);
+                return new SlotDef(done && p != null ? RarityKey(p.rarity) : "lock", done,
+                    p != null ? p.displayName : id, p != null ? RarityLabel(p.rarity) : null,
+                    done ? "зібрано цього тижня" : "ще не зібрано");
+            }).ToList();
+
+            return new DetailDef
+            {
+                collectionId = null,
+                typeLabel = $"Колекція тижня · {CollectionService.WeekDaysLeft()} дн",
+                name = "Колекція тижня",
+                count = $"{have}/{total}",
+                pct = Pct(have, total),
+                intro = "Збери врожай кожного з цих видів до кінця тижня. У понеділок — нові 4 види, прогрес обнуляється."
+                        + "\n\nНагорода: " + CollectionService.DescribeWeekReward(data),
+                hint = "Види тижня обираються з тих, що ти вже відкривав.",
+                claimLabel = $"Забрати нагороду · ще {total - have}",
+                claimable = CollectionService.IsWeekClaimable(data),
+                claimed = data.weekClaimed,
+                slots = slots,
+            };
+        }
+
+        /// <summary>Міні-слоти на картці: до 5 штук; для великих колекцій — пропорційно прогресу.</summary>
+        private static List<SlotDef> MiniSlots(PlayerData data, CollectionDef def)
+        {
+            const int maxMini = 5;
+            var keys = CollectionService.SlotKeys(def);
+            var list = new List<SlotDef>();
+            if (keys.Count <= maxMini)
+            {
+                foreach (var k in keys)
+                {
+                    var slot = MakeSlot(data, def, k);
+                    list.Add(new SlotDef(slot.rarity, slot.done));
+                }
+                return list;
+            }
+
+            int have = CollectionService.Progress(data, def);
+            int filled = have == 0 ? 0 : Mathf.Max(1, have * maxMini / keys.Count);
+            for (int i = 0; i < maxMini; i++)
+                list.Add(i < filled ? new SlotDef(def.accent, true) : new SlotDef("lock", false));
+            return list;
+        }
+
+        private static SlotDef MakeSlot(PlayerData data, CollectionDef def, string key)
+        {
+            bool done = CollectionService.IsSlotDone(data, def, key);
+            switch (def.goal)
+            {
+                case CollectionGoal.DiscoverPlant:
+                case CollectionGoal.PerfectCare:
+                case CollectionGoal.HarvestPlant:
+                {
+                    var p = PlantCatalog.Get(key);
+                    if (p == null) return new SlotDef("lock", false, key);
+                    int count = CollectionService.HarvestCount(data, key);
+                    string sub = def.goal switch
+                    {
+                        CollectionGoal.HarvestPlant =>
+                            $"зібрано {Mathf.Min(count, CollectionCatalog.VeteranHarvests)}/{CollectionCatalog.VeteranHarvests}",
+                        CollectionGoal.PerfectCare => done ? "без пропусків" : "ще не вдалось",
+                        _ => done ? $"зібрано {count}×" : $"з рівня {p.unlockLevel}",
+                    };
+                    return new SlotDef(done ? RarityKey(p.rarity) : "lock", done, p.displayName, RarityLabel(p.rarity), sub);
+                }
+                case CollectionGoal.CureAilment:
+                {
+                    var a = PlantAilments.Get((AilmentKind)int.Parse(key));
+                    return new SlotDef(done ? def.accent : "lock", done, a.name, a.isPest ? "шкідник" : "хвороба",
+                        done ? "вилікувано" : "ще не траплялось");
+                }
+                case CollectionGoal.OwnPot:
+                {
+                    var pot = Resources.Load<PotData>("Pots/" + key);
+                    return new SlotDef(done ? def.accent : "lock", done, pot != null ? pot.displayName : key, null,
+                        done ? "куплено" : pot != null ? $"{pot.unlockCost} монет" : null);
+                }
+                case CollectionGoal.CompleteCollection:
+                {
+                    var other = CollectionCatalog.Get(key);
+                    if (other == null) return new SlotDef("lock", false, key);
+                    return new SlotDef(done ? other.accent : "lock", done, other.name, null,
+                        $"{CollectionService.Progress(data, other)}/{CollectionService.Total(other)}");
+                }
+            }
+            return new SlotDef("lock", done, key);
+        }
 
         private GameObject MakeRow(Transform parent, float height, float spacing)
         {

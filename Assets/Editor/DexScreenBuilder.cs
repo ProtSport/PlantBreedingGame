@@ -256,7 +256,7 @@ namespace PlantBreeding.EditorTools
             HomeScreenBuilder.MakeNavItem(nav.transform, "nav-garden", "Сад", false, "Dex", SceneNavButton.NavAction.CloseScene);
             HomeScreenBuilder.MakeNavItem(nav.transform, "nav-lab", "Лабораторія", false, "Lab", SceneNavButton.NavAction.OpenAdditive);
             HomeScreenBuilder.MakeNavItem(nav.transform, "nav-dex", "Дендрарій", true, null, SceneNavButton.NavAction.OpenAdditive);
-            HomeScreenBuilder.MakeNavItem(nav.transform, "nav-shop", "Крамниця", false, null, SceneNavButton.NavAction.OpenAdditive);
+            HomeScreenBuilder.MakeNavItem(nav.transform, "nav-shop", "Крамниця", false, SceneNavButton.ShopScene, SceneNavButton.NavAction.OpenAdditive);
         }
     }
 }

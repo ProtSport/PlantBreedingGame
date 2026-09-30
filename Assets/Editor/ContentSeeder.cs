@@ -7,7 +7,7 @@ using static PlantBreeding.EditorTools.UIBuilderKit;
 namespace PlantBreeding.EditorTools
 {
     /// <summary>
-    /// Створює стартовий контент гри (20 кімнатних рослин + 7 горщиків) як
+    /// Створює стартовий контент гри (20 кімнатних рослин + 11 горщиків) як
     /// ScriptableObject-асети в Assets/Resources, щоб Resources.Load
     /// працював і в збірках, не лише в редакторі.
     /// Меню: PlantBreeding → Створити стартовий контент.
@@ -31,7 +31,7 @@ namespace PlantBreeding.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[PlantBreeding] Стартовий контент створено: 20 кімнатних рослин, 7 горщиків.");
+            Debug.Log("[PlantBreeding] Стартовий контент створено: 20 кімнатних рослин, 11 горщиків.");
         }
 
         // Каталог — 20 кімнатних рослин, таблиця з docs/ECONOMY.md (розділ «Види»).
@@ -136,9 +136,9 @@ namespace PlantBreeding.EditorTools
             else EditorUtility.SetDirty(plant);
         }
 
-        // 7 горщиків (docs/ECONOMY.md, «Горщики»): кожен, крім стартового, трохи
-        // прискорює ріст + дає другу перевагу. Разом ~4 800 монет — розраховано
-        // на запас монет до 18-го рівня разом із Лабораторією.
+        // 7 горщиків за монети (docs/ECONOMY.md, «Горщики») + «Бамбуковий» з колекції:
+        // кожен, крім стартового, трохи прискорює ріст + дає другу перевагу. Разом
+        // ~4 800 монет — розраховано на запас монет до 18-го рівня разом із Лабораторією.
         static void SeedPots()
         {
             var ids = new System.Collections.Generic.HashSet<string>();
@@ -149,14 +149,30 @@ namespace PlantBreeding.EditorTools
                 "#E79A65", "#CE7850", "#9C4B2C", "#D9885E", "#8A4526", false, 120));
             ids.Add(SeedPot("ceramic",    "Керамічний",      PotRarity.Rare,      -0.06f, 0.05f,  0f,    0f,    "−6% часу росту\n+5% ціна продажу",
                 "#A9CDE8", "#6E9EC8", "#3F6E99", "#8DB6D9", "#2E5578", false, 300));
-            ids.Add(SeedPot("wicker",     "Плетене кашпо",   PotRarity.Rare,      -0.08f, 0f,     0f,    0.25f, "−8% часу росту\n−25% хвороб",
-                "#E3C48E", "#C49A5E", "#8E6A38", "#D6B47C", "#6E4E26", false, 550));
+            ids.Add(SeedPot("wicker",     "Плетене кашпо",   PotRarity.Rare,      -0.08f, 0f,     0f,    0f,    "−8% часу росту\n+5% XP",
+                "#E3C48E", "#C49A5E", "#8E6A38", "#D6B47C", "#6E4E26", false, 550,
+                xpBonus: 0.05f));
             ids.Add(SeedPot("concrete",   "Бетонний",        PotRarity.Epic,      -0.10f, 0f,     0.5f,  0f,    "−10% часу росту\nполив рідше на 50%",
                 "#C4C4BF", "#9C9C97", "#6E6E6A", "#B0B0AB", "#4E4E4A", false, 850));
             ids.Add(SeedPot("brass",      "Латунний",        PotRarity.Epic,      -0.12f, 0.10f,  0f,    0f,    "−12% часу росту\n+10% ціна продажу",
                 "#F3DEA6", "#D3AC64", "#8A6430", "#D9B36A", "#7A5628", false, 1200));
-            ids.Add(SeedPot("marble",     "Мармуровий",      PotRarity.Legendary, -0.15f, 0.10f,  0f,    0.30f, "−15% часу росту\n+10% ціна · −30% хвороб",
-                "#F7F5F1", "#E4E0D9", "#C2BCB1", "#EEEAE3", "#C2BCB1", true, 1800));
+            ids.Add(SeedPot("marble",     "Мармуровий",      PotRarity.Legendary, -0.15f, 0.10f,  0f,    0f,    "−15% часу росту\n+10% ціна · +10% XP",
+                "#F7F5F1", "#E4E0D9", "#C2BCB1", "#EEEAE3", "#C2BCB1", true, 1800,
+                xpBonus: 0.10f));
+            // Не продається — нагорода колекції «Тропіки вдома» (CollectionCatalog).
+            ids.Add(SeedPot("bamboo",     "Бамбуковий",      PotRarity.Epic,      -0.10f, 0f,     0f,    0f,    "−10% часу росту\n+10% XP",
+                "#D9E6A6", "#AFC47A", "#77904A", "#C4D690", "#56703A", false, 0,
+                xpBonus: 0.10f, rewardSource: "Колекція «Тропіки вдома»"));
+            // Преміум — лише в Крамниці за реальні гроші (Shop/ShopCatalog), сила як у Мармурового.
+            ids.Add(SeedPot("crystal",    "Кришталевий",     PotRarity.Legendary, -0.15f, 0f,     0f,    0f,    "−15% часу росту\n+15% XP",
+                "#EEF9FC", "#A9DCEB", "#6FB6CF", "#DDF2F8", "#5A9FB8", true, 0,
+                xpBonus: 0.15f, rewardSource: PotData.ShopSource));
+            ids.Add(SeedPot("jade",       "Нефритовий",      PotRarity.Legendary, -0.15f, 0.08f,  0f,    0f,    "−15% часу росту\n+8% ціна · +8% XP",
+                "#8ED8AE", "#3E9C6E", "#1F6A48", "#7FCFA2", "#1F5E40", true, 0,
+                xpBonus: 0.08f, rewardSource: PotData.ShopSource));
+            ids.Add(SeedPot("gold",       "Золотий",         PotRarity.Legendary, -0.15f, 0.12f,  0f,    0f,    "−15% часу росту\n+12% ціна продажу",
+                "#FBEDB8", "#D9B665", "#8C6A2E", "#F2DC98", "#7A5A22", true, 0,
+                rewardSource: PotData.ShopSource));
 
             // Прибрати горщики з попередніх версій каталогу (напр. «Матовий чорний»).
             foreach (var guid in AssetDatabase.FindAssets("t:PotData", new[] { PotsDir }))
@@ -173,7 +189,7 @@ namespace PlantBreeding.EditorTools
 
         static string SeedPot(string id, string name, PotRarity rarity, float growMod, float sellBonus, float waterBonus,
             float resistance, string effect, string top, string mid, string bottom, string rim, string stroke,
-            bool premium, int unlockCost)
+            bool premium, int unlockCost, float xpBonus = 0f, string rewardSource = "")
         {
             string path = $"{PotsDir}/{id}.asset";
             var pot = AssetDatabase.LoadAssetAtPath<PotData>(path);
@@ -195,6 +211,8 @@ namespace PlantBreeding.EditorTools
             pot.colorStroke = Hex(stroke);
             pot.premiumVisual = premium;
             pot.unlockCost = unlockCost;
+            pot.xpBonus = xpBonus;
+            pot.rewardSource = rewardSource;
 
             if (isNew) AssetDatabase.CreateAsset(pot, path);
             else EditorUtility.SetDirty(pot);
