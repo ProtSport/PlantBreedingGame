@@ -42,3 +42,10 @@ Thumbs.db
 # Performance Testing: генерується під час збірки
 Assets/Resources/PerformanceTestRun*.json
 Assets/Resources/PerformanceTestRun*.json.meta
+
+# Firebase Unity SDK + External Dependency Manager (локальні пакети, 280 МБ, файл до 111 МБ —
+# GitHub не приймає): завантажує Tools/fetch-google-packages.ps1
+GooglePackages/
+# Копія Maven-репозиторію Firebase, яку EDM генерує з пакетів під час збірки
+Assets/GeneratedLocalRepo/
+Assets/GeneratedLocalRepo.meta

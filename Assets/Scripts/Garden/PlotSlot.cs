@@ -36,6 +36,12 @@ namespace PlantBreeding.Garden
         /// <summary>Прискорення за кристали вже використане для цієї посадки.</summary>
         public bool speedUpUsed;
 
+        /// <summary>Останнє «сонце» (або посадка) — від нього рахується наступне бажання світла.</summary>
+        public DateTime lastSunUtc;
+        /// <summary>Скільки разів дано сонце — кожен раз +5% до ціни (EconomyConfig.SunBonus).</summary>
+        public int sunCount;
+        private bool _wantsSunShown;
+
         /// <summary>Запланована (або поточна, якщо Sick) хвороба/шкідник.</summary>
         public AilmentKind ailment = AilmentKind.None;
         /// <summary>На якій частці росту з'явиться хвороба; &lt;0 — не заплановано/вже вилікувано.</summary>
@@ -67,10 +73,14 @@ namespace PlantBreeding.Garden
             lastWateredUtc = plantedAtUtc;
             wateredCount = 0;
             speedUpUsed = false;
+            lastSunUtc = plantedAtUtc;
+            sunCount = 0;
+            _wantsSunShown = false;
             (ailment, ailmentAtFraction) = PlantAilments.RollAtPlanting(plantData, potData, effectiveGrowTimeSeconds);
             pestTapsLeft = 0;
             SetState(PlotState.Growing);
             EconomyService.Track(DailyTaskKind.Plant, 1, plantData.plantId);
+            Cloud.Telemetry.Plant(plantData.plantId, potData != null ? potData.potId : null);
         }
 
         /// <summary>Відкриває заблоковану грядку (рівень або покупка).</summary>
@@ -85,6 +95,35 @@ namespace PlantBreeding.Garden
         private double WaterIntervalSeconds =>
             plant.waterDepleteSeconds * (1f + (pot != null ? pot.waterIntervalBonus : 0f)
                                             + CollectionService.WaterIntervalBonus(plant.plantId));
+
+        /// <summary>Інтервал «хоче на сонце»: MaxSunnings разів рівномірно за час росту.</summary>
+        private double SunIntervalSeconds =>
+            Math.Max(EconomyConfig.MinSunIntervalSeconds, effectiveGrowTimeSeconds / (EconomyConfig.MaxSunnings + 1));
+
+        /// <summary>
+        /// Рослина просить світла (екран догляду / тап по грядці). Як і спрага,
+        /// не зупиняє ріст — лише дає шанс на бонус до ціни.
+        /// </summary>
+        public bool WantsSun =>
+            plant != null
+            && (state == PlotState.Growing || state == PlotState.NeedsWater)
+            && sunCount < EconomyConfig.MaxSunnings
+            && (GameClock.UtcNow - lastSunUtc).TotalSeconds >= SunIntervalSeconds;
+
+        /// <summary>Скільки секунд до наступного бажання сонця; 0 — вже хоче, &lt;0 — більше не захоче.</summary>
+        public double SecondsUntilSun()
+        {
+            if (plant == null || sunCount >= EconomyConfig.MaxSunnings) return -1;
+            return Math.Max(0, SunIntervalSeconds - (GameClock.UtcNow - lastSunUtc).TotalSeconds);
+        }
+
+        /// <summary>Скільки секунд до наступної спраги; 0 — вже хоче пити, &lt;0 — більше не попросить.</summary>
+        public double SecondsUntilWater()
+        {
+            if (plant == null || wateredCount >= EconomyConfig.MaxCareWaterings) return -1;
+            if (state == PlotState.NeedsWater) return 0;
+            return Math.Max(0, WaterIntervalSeconds - (GameClock.UtcNow - lastWateredUtc).TotalSeconds);
+        }
 
         /// <summary>
         /// «Ідеальний догляд» (колекція): полито стільки разів, скільки рослина
@@ -122,8 +161,17 @@ namespace PlantBreeding.Garden
 
             if (elapsed >= effectiveGrowTimeSeconds)
             {
+                _wantsSunShown = false;
                 SetState(PlotState.Ready);
                 return;
+            }
+
+            // Бажання сонця — не окремий стан: лише перемалювати чіп грядки й зберегти.
+            bool wantsSun = WantsSun;
+            if (wantsSun != _wantsSunShown)
+            {
+                _wantsSunShown = wantsSun;
+                StateChanged?.Invoke(this);
             }
 
             // Спрага не зупиняє ріст — лише пропонує полив за бонус до ціни.
@@ -164,7 +212,21 @@ namespace PlantBreeding.Garden
             SetState(PlotState.Growing);
             GameManager.Instance?.AddXp(EconomyConfig.WaterXp);
             EconomyService.Track(DailyTaskKind.Water, 1);
+            Cloud.Telemetry.Care("water");
             GameEvents.RaiseToast($"Полито! +{Mathf.RoundToInt(CollectionService.CareBonusPerWatering * 100f)}% до ціни врожаю");
+        }
+
+        /// <summary>Дати рослині сонця (екран догляду або тап по грядці з чіпом «Сонце»).</summary>
+        public void GiveSun()
+        {
+            if (!WantsSun) return;
+            sunCount++;
+            lastSunUtc = GameClock.UtcNow;
+            _wantsSunShown = false;
+            StateChanged?.Invoke(this);
+            GameManager.Instance?.AddXp(EconomyConfig.SunXp);
+            Cloud.Telemetry.Care("sun");
+            GameEvents.RaiseToast($"Сонечко! +{Mathf.RoundToInt(EconomyConfig.SunBonus * 100f)}% до ціни врожаю");
         }
 
         // ── Хвороби/шкідники ─────────────────────────────────────────────
@@ -197,6 +259,7 @@ namespace PlantBreeding.Garden
             {
                 plantedAtUtc += paused;
                 lastWateredUtc += paused;
+                lastSunUtc += paused;
             }
             var cured = ailment;
             ClearAilment();
@@ -221,15 +284,18 @@ namespace PlantBreeding.Garden
             var harvested = plant;
             var harvestedPot = pot;
             int watered = wateredCount;
+            int sun = sunCount;
             bool perfectCare = IsPerfectCare();
             plant = null;
             pot = null;
             boost = StarterBoostKind.None;
             wateredCount = 0;
+            sunCount = 0;
+            _wantsSunShown = false;
             speedUpUsed = false;
             ClearAilment();
             SetState(PlotState.Empty);
-            return EconomyService.GrantHarvest(harvested, harvestedPot, watered, perfectCare, silent);
+            return EconomyService.GrantHarvest(harvested, harvestedPot, watered, sun, perfectCare, silent);
         }
 
         /// <summary>Скільки секунд росту вже зараховано (під час хвороби — заморожено).</summary>
@@ -274,6 +340,8 @@ namespace PlantBreeding.Garden
                 lastWateredUnixSeconds = ToUnix(lastWateredUtc),
                 wateredCount = wateredCount,
                 speedUpUsed = speedUpUsed,
+                lastSunUnixSeconds = ToUnix(lastSunUtc),
+                sunCount = sunCount,
                 ailment = (int)ailment,
                 ailmentAtFraction = ailmentAtFraction,
                 sickSinceUnixSeconds = ToUnix(sickSinceUtc),
@@ -300,6 +368,8 @@ namespace PlantBreeding.Garden
             lastWateredUtc = save.lastWateredUnixSeconds > 0 ? FromUnix(save.lastWateredUnixSeconds) : plantedAtUtc;
             wateredCount = save.wateredCount;
             speedUpUsed = save.speedUpUsed;
+            lastSunUtc = save.lastSunUnixSeconds > 0 ? FromUnix(save.lastSunUnixSeconds) : plantedAtUtc;
+            sunCount = save.sunCount;
             ailment = Enum.IsDefined(typeof(AilmentKind), save.ailment) ? (AilmentKind)save.ailment : AilmentKind.None;
             ailmentAtFraction = ailment == AilmentKind.None ? -1f : save.ailmentAtFraction;
             sickSinceUtc = FromUnix(save.sickSinceUnixSeconds);
@@ -321,6 +391,7 @@ namespace PlantBreeding.Garden
                     {
                         plantedAtUtc += paused;
                         lastWateredUtc += paused;
+                        lastSunUtc += paused;
                     }
                     state = PlotState.Growing;
                 }

@@ -17,6 +17,52 @@
       },
       "hash": "11836003a5e2ffcb7715ecec7e1fbb9d9cdb5bb8"
     },
+    "com.google.external-dependency-manager": {
+      "version": "file:../GooglePackages/external-dependency-manager",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.google.firebase.analytics": {
+      "version": "file:../GooglePackages/analytics",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.google.firebase.app": "13.17.0"
+      }
+    },
+    "com.google.firebase.app": {
+      "version": "file:../GooglePackages/app",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.google.external-dependency-manager": "1.2.186"
+      }
+    },
+    "com.google.firebase.auth": {
+      "version": "file:../GooglePackages/auth",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.google.firebase.app": "13.17.0"
+      }
+    },
+    "com.google.firebase.crashlytics": {
+      "version": "file:../GooglePackages/crashlytics",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.google.firebase.app": "13.17.0"
+      }
+    },
+    "com.google.firebase.firestore": {
+      "version": "file:../GooglePackages/firestore",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.google.firebase.app": "13.17.0"
+      }
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

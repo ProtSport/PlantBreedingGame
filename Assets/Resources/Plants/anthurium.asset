@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: anthurium
   displayName: "\u0410\u043D\u0442\u0443\u0440\u0456\u0443\u043C"
-  growTimeSeconds: 21600
-  waterDepleteSeconds: 5400
+  growTimeSeconds: 9000
+  waterDepleteSeconds: 2250
   sprite25: {fileID: 3286163911610860551, guid: 01d02cdc93d5482088d48cbdeb194d57, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 0a1f8137114e4950b9cf216ad6bec470, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: e43811ecac0a4388a33ab407c0e947c1, type: 3}

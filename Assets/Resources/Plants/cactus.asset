@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: cactus
   displayName: "\u041A\u0430\u043A\u0442\u0443\u0441"
-  growTimeSeconds: 600
-  waterDepleteSeconds: 150
+  growTimeSeconds: 60
+  waterDepleteSeconds: 120
   sprite25: {fileID: 3286163911610860551, guid: 1e2656a79b3c416b910512bb5f68d4a8, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 919ec22c9c3e474b97e5dabbc91aff9b, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: a30983a989f84ecaa6fe3a721b382051, type: 3}

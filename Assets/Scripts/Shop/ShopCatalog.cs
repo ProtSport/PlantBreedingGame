@@ -24,7 +24,7 @@ namespace PlantBreeding.Shop
     /// Каталог Крамниці за макетом Крамниця/export-shop/kramnytsia.html
     /// (docs/ECONOMY.md, «Крамниця»). Усі покупки — за реальні гроші через
     /// In-App Purchase (StoreKit на iOS, Google Play Billing на Android) —
-    /// StoreGateway. Ціни в гривнях — запасні підписи: у грі показується
+    /// StoreGateway. Ціни в доларах (найдешевші — $0.49) — запасні підписи: у грі показується
     /// локалізована ціна з магазину, коли товари завантажено.
     ///
     /// Кожен storeId треба завести в App Store Connect і Google Play Console
@@ -58,51 +58,51 @@ namespace PlantBreeding.Shop
         {
             // ── Набори (одноразові) ─────────────────────────────────────────
             new ShopProduct(StarterId, ShopProductType.Consumable, ShopSection.Sets, "Стартовий", "Набір · один раз",
-                "20 кристалів + 1 500 монет + Кришталевий горщик", "79 грн")
+                "20 кристалів + 1 500 монет + Кришталевий горщик", "$0.79")
                 { gems = 20, coins = 1500, potId = "crystal", oneTime = true },
             new ShopProduct(ProId, ShopProductType.Consumable, ShopSection.Sets, "Садівник-профі", "Набір · один раз",
-                "80 кристалів + 5 000 монет + Нефритовий горщик", "349 грн")
+                "80 кристалів + 5 000 монет + Нефритовий горщик", "$3.49")
                 { gems = 80, coins = 5000, potId = "jade", oneTime = true },
 
             // ── Кристали ────────────────────────────────────────────────────
             new ShopProduct("gems_10", ShopProductType.Consumable, ShopSection.Gems, "10 кристалів", "Кристали",
-                "Прискорюють ріст рослини в 10 разів.", "49 грн") { gems = 10 },
+                "Прискорюють ріст рослини в 10 разів.", "$0.49") { gems = 10 },
             new ShopProduct("gems_30", ShopProductType.Consumable, ShopSection.Gems, "30 кристалів", "Кристали",
-                "На 10% більше, ніж у найменшому пакеті.", "129 грн") { gems = 30, badge = "+10%" },
+                "На 10% більше, ніж у найменшому пакеті.", "$1.29") { gems = 30, badge = "+10%" },
             new ShopProduct("gems_80", ShopProductType.Consumable, ShopSection.Gems, "80 кристалів", "Кристали",
-                "На 25% більше, ніж у найменшому пакеті.", "299 грн") { gems = 80, badge = "+25%" },
+                "На 25% більше, ніж у найменшому пакеті.", "$2.99") { gems = 80, badge = "+25%" },
             new ShopProduct("gems_200", ShopProductType.Consumable, ShopSection.Gems, "200 кристалів", "Кристали",
-                "Найвигідніший пакет.", "649 грн") { gems = 200, badge = "Вигідно" },
+                "Найвигідніший пакет.", "$6.49") { gems = 200, badge = "Вигідно" },
 
             // ── Монети ──────────────────────────────────────────────────────
             new ShopProduct("coins_1000", ShopProductType.Consumable, ShopSection.Coins, "1 000 монет", "Монети",
-                "Приблизно один день гри.", "49 грн") { coins = 1000, note = "≈ день гри" },
+                "Приблизно один день гри.", "$0.49") { coins = 1000, note = "≈ день гри" },
             new ShopProduct("coins_3500", ShopProductType.Consumable, ShopSection.Coins, "3 500 монет", "Монети",
-                "Приблизно три дні гри.", "129 грн") { coins = 3500, note = "≈ 3 дні гри" },
+                "Приблизно три дні гри.", "$1.29") { coins = 3500, note = "≈ 3 дні гри" },
             new ShopProduct("coins_10000", ShopProductType.Consumable, ShopSection.Coins, "10 000 монет", "Монети",
-                "Приблизно дев'ять днів гри.", "299 грн") { coins = 10000, note = "≈ 9 днів гри" },
+                "Приблизно дев'ять днів гри.", "$2.99") { coins = 10000, note = "≈ 9 днів гри" },
 
             // ── Преміум-горщики (назавжди) ─────────────────────────────────
             new ShopProduct("pot_crystal", ShopProductType.NonConsumable, ShopSection.Pots, "Кришталевий", "Преміум-горщик · назавжди",
-                "−15% часу росту · +15% XP", "99 грн") { potId = "crystal" },
+                "−15% часу росту · +15% XP", "$0.99") { potId = "crystal" },
             new ShopProduct("pot_jade", ShopProductType.NonConsumable, ShopSection.Pots, "Нефритовий", "Преміум-горщик · назавжди",
-                "−15% часу росту · +8% ціна · +8% XP", "99 грн") { potId = "jade" },
+                "−15% часу росту · +8% ціна · +8% XP", "$0.99") { potId = "jade" },
             new ShopProduct("pot_gold", ShopProductType.NonConsumable, ShopSection.Pots, "Золотий", "Преміум-горщик · назавжди",
-                "−15% часу росту · +12% ціна продажу", "149 грн") { potId = "gold" },
+                "−15% часу росту · +12% ціна продажу", "$1.49") { potId = "gold" },
 
             // ── Насіння ─────────────────────────────────────────────────────
             new ShopProduct(SeedsId, ShopProductType.Consumable, ShopSection.Seeds, "Набір насіння", "Насіння",
-                "10 насінин найдорожчого з відкритих видів.", "49 грн") { seeds = SeedPackCount },
+                "10 насінин найдорожчого з відкритих видів.", "$0.49") { seeds = SeedPackCount },
 
             // ── Додаткові грядки (назавжди) ────────────────────────────────
             new ShopProduct(Plot7Id, ShopProductType.NonConsumable, ShopSection.Plots, "7-ма грядка", "Грядка · назавжди",
-                "Ще одне місце в саду.", "149 грн") { plotIndex = 6 },
+                "Ще одне місце в саду.", "$1.49") { plotIndex = 6 },
             new ShopProduct(Plot8Id, ShopProductType.NonConsumable, ShopSection.Plots, "8-ма грядка", "Грядка · назавжди",
-                "Ще одне місце в саду.", "199 грн") { plotIndex = 7, requiresId = Plot7Id },
+                "Ще одне місце в саду.", "$1.99") { plotIndex = 7, requiresId = Plot7Id },
 
             // ── Підписка ────────────────────────────────────────────────────
             new ShopProduct(ClubId, ShopProductType.Subscription, ShopSection.Club, "Клуб садівника", "Підписка",
-                "3 кристали і 200 монет щодня · +10% монет з продажу · рамка «Клуб» і аватар «Сонце» назавжди. Щомісяця, скасувати можна будь-коли.", "199 грн / міс")
+                "3 кристали і 200 монет щодня · +10% монет з продажу · рамка «Клуб» і аватар «Сонце» назавжди. Щомісяця, скасувати можна будь-коли.", "$1.99 / міс")
                 { club = true },
         };
 
@@ -119,6 +119,14 @@ namespace PlantBreeding.Shop
         {
             foreach (var p in All)
                 if (p.id == id) return p;
+            return null;
+        }
+
+        /// <summary>Товар-грядка для слота саду (6 → 7-ма, 7 → 8-ма) або null.</summary>
+        public static ShopProduct ProductForPlot(int slotIndex)
+        {
+            foreach (var p in All)
+                if (p.plotIndex == slotIndex) return p;
             return null;
         }
 

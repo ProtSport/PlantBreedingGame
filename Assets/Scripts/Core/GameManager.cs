@@ -50,6 +50,9 @@ namespace PlantBreeding.Core
             StoreGateway.Init(); // In-App Purchase: ціни, незавершені покупки, стан підписки
             StartCoroutine(GameClock.Sync(OnClockSynced));
 
+            // Firebase: вхід, хмарне збереження, Crashlytics, Analytics (Cloud/CloudService).
+            if (GetComponent<Cloud.CloudService>() == null) gameObject.AddComponent<Cloud.CloudService>();
+
             GameNotifications.Init();
             GameNotifications.OnAppForeground(); // гравець у грі — старі нагадування вже не потрібні
             GameNotifications.MaybeRequestPermission(playerData);
@@ -261,11 +264,37 @@ namespace PlantBreeding.Core
             return true;
         }
 
-        /// <summary>Розблоковує горщик за монети назавжди. Повертає false, якщо вже є або грошей не вистачає.</summary>
+        // ── Резерв на рослину ─────────────────────────────────────────────
+        // Покупки «не рослини» (горщик, грядка за монети, дослідження Лабораторії) не можуть
+        // лишити гравця без грошей на найдешевшу рослину — інакше гра застрягає: нічого
+        // посадити — нічого продати. Сама посадка (рослина + добриво) може витратити все.
+
+        /// <summary>Ціна найдешевшої рослини, доступної за рівнем (0 — якщо таких немає).</summary>
+        public int CheapestPlantCost
+        {
+            get
+            {
+                int min = int.MaxValue;
+                foreach (var p in Garden.PlantCatalog.All)
+                    if (p.seedCost > 0 && p.unlockLevel <= playerData.level && p.seedCost < min) min = p.seedCost;
+                return min == int.MaxValue ? 0 : min;
+            }
+        }
+
+        /// <summary>Після витрати amount лишиться щонайменше на найдешевшу рослину.</summary>
+        public bool CanSpendKeepingPlantMoney(int amount) =>
+            amount >= 0 && playerData.coins - amount >= CheapestPlantCost;
+
+        /// <summary>TrySpendCoins з резервом на рослину — для всього, що не є посадкою.</summary>
+        public bool TrySpendCoinsKeepingPlantMoney(int amount) =>
+            CanSpendKeepingPlantMoney(amount) && TrySpendCoins(amount);
+
+        /// <summary>Розблоковує горщик за монети назавжди. Повертає false, якщо вже є, грошей не вистачає
+        /// або після покупки не лишиться на найдешевшу рослину.</summary>
         public bool TryUnlockPot(string potId, int cost)
         {
             if (IsPotOwned(potId)) return true;
-            if (!TrySpendCoins(cost)) return false;
+            if (!TrySpendCoinsKeepingPlantMoney(cost)) return false;
             playerData.ownedPotIds.Add(potId);
             CollectionService.OnPotOwned(potId); // «Колекція горщиків»
             return true;

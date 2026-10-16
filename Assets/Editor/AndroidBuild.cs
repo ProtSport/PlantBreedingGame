@@ -12,7 +12,7 @@ namespace PlantBreeding.EditorTools
     /// Збірки для Android.
     ///
     /// Tools → Build Android APK — швидкий APK для встановлення на свій телефон
-    /// (налагоджувальний підпис; покупки в ньому НЕ працюють).
+    /// (підпис ключем завантаження, якщо він є; покупки працюють лише у версії з Google Play).
     ///
     /// Tools → Build Android App Bundle (Google Play) — підписаний .aab для
     /// завантаження в Google Play Console (внутрішнє тестування / реліз).
@@ -36,7 +36,10 @@ namespace PlantBreeding.EditorTools
         public static void Build()
         {
             ApplyPlayerSettings();
-            PlayerSettings.Android.useCustomKeystore = false;
+            // Ключем завантаження, якщо він є: його SHA-1 додано у Firebase, тож
+            // вхід через Google працює і в APK, встановленому напряму на телефон.
+            if (File.Exists(KeystorePropsPath)) ApplyUploadKeystore();
+            else PlayerSettings.Android.useCustomKeystore = false;
             EditorUserBuildSettings.buildAppBundle = false;
             RunBuild(ApkPath);
         }
@@ -46,6 +49,11 @@ namespace PlantBreeding.EditorTools
         {
             ApplyPlayerSettings();
             if (!ApplyUploadKeystore()) return;
+
+            // Звіт про бібліотеки для Google Play (SDK Index) — необов'язковий. Його збирання
+            // хешує кожен файл кешу пакетів, а частина з них на цьому ПК недоступна
+            // (довгі шляхи / блокування), і збірка падала на WritePlayDependencies.
+            PlayerSettings.Android.reportGooglePlayAppDependencies = false;
 
             PlayerSettings.Android.bundleVersionCode++;
             AssetDatabase.SaveAssets();

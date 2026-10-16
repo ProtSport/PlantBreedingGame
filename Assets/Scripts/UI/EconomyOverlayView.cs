@@ -11,11 +11,12 @@ namespace PlantBreeding.UI
 {
     /// <summary>
     /// Шар економіки поверх екрану «Мій сад» (docs/ECONOMY.md):
-    ///  • тости нагород ("+15 монет", "Рівень 2!") з GameEvents.OnToast;
+    ///  • сповіщення вгорі екрана (EconomyOverlayView.Notifications.cs): продаж рослини,
+    ///    виконане завдання з кнопкою «Забрати», інші повідомлення (GameEvents.OnToast);
     ///  • панель «Завдання дня» (кнопка-зірка в шапці HeaderView будь-якого
     ///    екрану → OpenTasks): нагорода за вхід зі стріком 7 днів, 3 щоденні
     ///    завдання, скриня за всі три;
-    ///  • вікно прискорення росту за кристали (EconomyOverlayView.SpeedUp.cs);
+    ///  • картка рослини з прискоренням за кристали (EconomyOverlayView.PlantCard.cs);
     ///  • Крамниця кристалів (EconomyOverlayView.Shop.cs → OpenShop) — пілюля
     ///    кристалів у шапці будь-якого екрану і пункт «Крамниця» нижнього меню;
     ///  • кнопка «Зібрати все» (EconomyOverlayView.HarvestAll.cs);
@@ -43,8 +44,6 @@ namespace PlantBreeding.UI
         public TMP_FontAsset fontHead;
         public TMP_FontAsset fontUi;
 
-        private const int ToastSlots = 3;
-        private const float ToastSeconds = 3.2f;
 
         private class ClaimButton
         {
@@ -71,19 +70,17 @@ namespace PlantBreeding.UI
         private TMP_Text _chestLabel;
         private ClaimButton _chestClaim;
 
-        private readonly List<CanvasGroup> _toasts = new List<CanvasGroup>();
-        private readonly List<TMP_Text> _toastLabels = new List<TMP_Text>();
-        private readonly float[] _toastUntil = new float[ToastSlots];
-        private readonly Queue<string> _toastQueue = new Queue<string>();
 
         private void OnEnable()
         {
             Instance = this;
             GameEvents.OnToast += EnqueueToast;
+            GameEvents.OnSale += EnqueueSale;
+            GameEvents.OnTaskCompleted += EnqueueTask;
             GameEvents.OnDailyStateChanged += RefreshAll;
             GameEvents.OnCurrencyChanged += RefreshAll;
             GameEvents.OnDexBadgeChanged += RefreshDexBadge;
-            GardenManager.GrowingPlotTapped += OpenSpeedUp;
+            GardenManager.GrowingPlotTapped += OpenPlantCard;
             GardenManager.SickPlotTapped += OpenTreatment;
         }
 
@@ -91,10 +88,12 @@ namespace PlantBreeding.UI
         {
             if (Instance == this) Instance = null;
             GameEvents.OnToast -= EnqueueToast;
+            GameEvents.OnSale -= EnqueueSale;
+            GameEvents.OnTaskCompleted -= EnqueueTask;
             GameEvents.OnDailyStateChanged -= RefreshAll;
             GameEvents.OnCurrencyChanged -= RefreshAll;
             GameEvents.OnDexBadgeChanged -= RefreshDexBadge;
-            GardenManager.GrowingPlotTapped -= OpenSpeedUp;
+            GardenManager.GrowingPlotTapped -= OpenPlantCard;
             GardenManager.SickPlotTapped -= OpenTreatment;
         }
 
@@ -102,15 +101,15 @@ namespace PlantBreeding.UI
         {
             BuildOverlayRoot();
             BuildHarvestAllButton();
-            BuildToasts();
+            BuildNotifications();
             BuildModal();
-            BuildSpeedUpModal();
+            BuildPlantCardModal();
             BuildTreatmentModal();
             BuildSettingsSheet();
             BuildDexBadge();
 
             _modal.SetActive(false);
-            _speedModal.SetActive(false);
+            _cardModal.SetActive(false);
             _treatModal.SetActive(false);
             RefreshAll();
             RefreshHarvestAll();
@@ -135,38 +134,16 @@ namespace PlantBreeding.UI
             }
             else if (data.totalHarvests == 0)
             {
-                EnqueueToast("Тапни порожню грядку й посади фіалку — вона виросте за 3 хвилини");
+                EnqueueToast("Тапни порожню грядку й посади фіалку — вона виросте за 30 секунд");
             }
         }
 
         private void Update()
         {
-            UpdateSpeedUp();
+            UpdatePlantCard();
+            PositionHarvestAll(); // safe area могла змінитись (поворот, симуляція екрана)
 
-            for (int i = 0; i < _toasts.Count; i++)
-            {
-                var cg = _toasts[i];
-                if (cg.alpha <= 0f) continue;
-                float left = _toastUntil[i] - Time.unscaledTime;
-                cg.alpha = Mathf.Clamp01(left / 0.4f);
-            }
-
-            if (_toastQueue.Count > 0)
-            {
-                for (int i = 0; i < _toasts.Count && _toastQueue.Count > 0; i++)
-                {
-                    if (_toasts[i].alpha > 0f) continue;
-                    _toastLabels[i].text = _toastQueue.Dequeue();
-                    _toasts[i].alpha = 1f;
-                    _toastUntil[i] = Time.unscaledTime + ToastSeconds;
-                    _toasts[i].transform.SetAsLastSibling();
-                }
-            }
-        }
-
-        private void EnqueueToast(string message)
-        {
-            if (!string.IsNullOrEmpty(message)) _toastQueue.Enqueue(message);
+            UpdateNotifications();
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -183,47 +160,6 @@ namespace PlantBreeding.UI
             canvas.sortingOrder = 30;
             _overlayRoot = (RectTransform)go.transform;
             Stretch(_overlayRoot);
-        }
-
-        private void BuildToasts()
-        {
-            var stack = new GameObject("Toasts", typeof(RectTransform), typeof(VerticalLayoutGroup));
-            stack.transform.SetParent(_overlayRoot, false);
-            var rt = (RectTransform)stack.transform;
-            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1);
-            rt.pivot = new Vector2(0.5f, 1);
-            rt.anchoredPosition = new Vector2(0, -96);
-            rt.sizeDelta = new Vector2(-32, 3 * 50);
-            var vl = stack.GetComponent<VerticalLayoutGroup>();
-            vl.spacing = 6; vl.childAlignment = TextAnchor.UpperCenter;
-            vl.childControlWidth = true; vl.childControlHeight = false;
-            vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
-
-            for (int i = 0; i < ToastSlots; i++)
-            {
-                var toast = new GameObject("Toast", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
-                toast.transform.SetParent(stack.transform, false);
-                ((RectTransform)toast.transform).sizeDelta = new Vector2(0, 44);
-                var bg = toast.GetComponent<Image>();
-                bg.sprite = sprPill; bg.type = Image.Type.Sliced;
-                bg.color = UIColors.Rgba(UIColors.Hex("#161E10"), 0.96f);
-                bg.raycastTarget = false;
-                var line = MakeImage(toast.transform, "Border", sprPillLine, UIColors.Rgba(UIColors.GoldLt, 0.45f), Image.Type.Sliced);
-                Stretch(line.rectTransform);
-
-                var label = MakeLabel(toast.transform, "Text", "", fontUi, 13, UIColors.Text, FontStyles.Bold);
-                Stretch(label.rectTransform);
-                label.rectTransform.offsetMin = new Vector2(16, 2);
-                label.rectTransform.offsetMax = new Vector2(-16, -2);
-                label.alignment = TextAlignmentOptions.Center;
-                label.enableAutoSizing = true;
-                label.fontSizeMin = 9; label.fontSizeMax = 13;
-
-                var cg = toast.GetComponent<CanvasGroup>();
-                cg.alpha = 0f; cg.blocksRaycasts = false; cg.interactable = false;
-                _toasts.Add(cg);
-                _toastLabels.Add(label);
-            }
         }
 
         /// <summary>
@@ -383,7 +319,7 @@ namespace PlantBreeding.UI
             RefreshAll();
         }
 
-        private void CloseModal() => _modal.SetActive(false);
+        internal void CloseModal() => _modal.SetActive(false);
 
         private void RefreshAll()
         {

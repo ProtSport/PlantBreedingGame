@@ -20,6 +20,8 @@ namespace PlantBreeding.Lab
         AlreadyMaxed,
         SlotBusy,
         NotEnoughCoins,
+        /// <summary>Монет вистачає, але після дослідження не лишиться на найдешевшу рослину.</summary>
+        KeepPlantMoney,
         NotEnoughGems
     }
 
@@ -140,6 +142,7 @@ namespace PlantBreeding.Lab
 
             var def = LabResearchCatalog.GetNode(branch, completed);
             if (data.coins < def.coinCost) return LabStartResult.NotEnoughCoins;
+            if (!gm.CanSpendKeepingPlantMoney(def.coinCost)) return LabStartResult.KeepPlantMoney;
             if (data.gems < def.gemCost) return LabStartResult.NotEnoughGems;
 
             gm.TrySpendCoins(def.coinCost);

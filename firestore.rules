@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Правила доступу до Firestore для «Мій сад» (Cloud/CloudService).
+// Вставити в Firebase Console → Firestore → вкладка Rules → Publish.
+// Кожен гравець читає й пише лише свій документ players/{uid}; більше нічого не доступно.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /players/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['json', 'savedAt', 'level', 'xp', 'harvests', 'appVersion', 'updatedAt'])
+        && request.resource.data.json is string
+        && request.resource.data.json.size() < 500000
+        && request.resource.data.savedAt is number;
+    }
+  }
+}

@@ -59,6 +59,8 @@ namespace PlantBreeding.UI
         public Sprite sprPill;
         public Sprite sprPillLine;
         public Sprite sprPotGlyph;
+        public Sprite sprCoin;
+        public Sprite sprTag;   // rounded-12 — цінник у кутку картки рослини
         public TMP_FontAsset fontHead;
         public TMP_FontAsset fontUi;
 
@@ -68,12 +70,11 @@ namespace PlantBreeding.UI
             public Image bg, border;
             public CanvasGroup group;
             public TMP_Text sub;
-            public Button buy5;
-            public Image buy5Bg;
-            public TMP_Text buy5Label;
+            public Image priceBg;      // цінник у кутку: ціна ОДНІЄЇ рослини
+            public TMP_Text priceLabel;
+            public GameObject priceCoin;
         }
 
-        private const int BulkSeedCount = 5;
 
         private class PotCardHandle
         {
@@ -137,11 +138,10 @@ namespace PlantBreeding.UI
 
         private void ApplyDefaults()
         {
-            // Автовибір лише сорту, який реально є в запасі (інакше довелось би
-            // "садити" неіснуючу насінину) — якщо запасу немає, гравець сам
-            // тапає картку, що докуповує насінину.
-            _selectedPlant = _allPlants.FirstOrDefault(p => GameManager.Instance != null && GameManager.Instance.GetSeedCount(p.plantId) > 0
-                && !IsLevelLocked(p));
+            // Автовибір: подарована насінина (старт, нагороди) або перша рослина, на яку вистачає монет.
+            // Купівля — однієї рослини і лише в момент посадки (OnPlantClicked).
+            _selectedPlant = _allPlants.FirstOrDefault(p => !IsLevelLocked(p) && HasFreeSeed(p))
+                             ?? _allPlants.FirstOrDefault(p => !IsLevelLocked(p) && CanAfford(p));
 
             string lastUsedPotId = GameManager.Instance != null ? GameManager.Instance.playerData.lastUsedPotId : null;
             _selectedPot = _pots.FirstOrDefault(p => p.potId == lastUsedPotId) ?? _pots.FirstOrDefault();
@@ -180,7 +180,7 @@ namespace PlantBreeding.UI
                     sub.alignment = TextAlignmentOptions.Center;
                     handle.sub = sub;
 
-                    BuildBulkBuyButton(card, handle);
+                    BuildPriceTag(card, handle);
                 });
                 _plantCards.Add(handle);
             }
@@ -244,52 +244,59 @@ namespace PlantBreeding.UI
             var gm = GameManager.Instance;
             if (gm == null || IsLevelLocked(plant)) return;
 
-            if (gm.GetSeedCount(plant.plantId) > 0)
-            {
-                _selectedPlant = plant;
-            }
-            else if (plant.seedCost > 0 && gm.TryBuySeed(plant.plantId, plant.seedCost))
-            {
-                _selectedPlant = plant;
-            }
+            // Тап лише обирає рослину; платимо при посадці (кнопка «Посадити · 8»).
+            if (HasFreeSeed(plant) || CanAfford(plant)) _selectedPlant = plant;
             RefreshVisuals();
         }
 
         /// <summary>
-        /// Пілюля «+5» у кутку картки: купує 5 насінин одним тапом (вкладена
-        /// кнопка перехоплює клік — картка під нею не спрацьовує).
+        /// Цінник у кутку картки: скільки коштує ОДНА рослина (монети знімаються при посадці).
+        /// Не кнопка — тап проходить на саму картку (вибір рослини).
         /// </summary>
-        private void BuildBulkBuyButton(Transform card, PlantCardHandle handle)
+        private void BuildPriceTag(Transform card, PlantCardHandle handle)
         {
-            var go = new GameObject("Buy5", typeof(RectTransform), typeof(Image), typeof(Button));
+            // Радіус 12; ширину рахує LayoutPriceTag за текстом — однакові відступи з обох боків.
+            var go = new GameObject("Price", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(card, false);
-            Place((RectTransform)go.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-5, -5), new Vector2(58, 20));
+            Place((RectTransform)go.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-6, -6), new Vector2(44, 24));
             var bg = go.GetComponent<Image>();
-            bg.sprite = sprPill; bg.type = Image.Type.Sliced;
-            var btn = go.GetComponent<Button>();
-            btn.targetGraphic = bg;
-            btn.onClick.AddListener(() => HandleBulkBuy(handle.plant));
+            bg.sprite = sprTag != null ? sprTag : sprPill; bg.type = Image.Type.Sliced;
+            bg.raycastTarget = false;
 
-            var label = MakeLabel(go.transform, "Label", "", fontUi, 9.5f, UIColors.Text, FontStyles.Bold);
-            Stretch(label.rectTransform);
-            label.alignment = TextAlignmentOptions.Center;
+            var label = MakeLabel(go.transform, "Label", "", fontUi, 11f, UIColors.Text, FontStyles.Bold);
+            label.alignment = TextAlignmentOptions.MidlineLeft;
             label.textWrappingMode = TextWrappingModes.NoWrap;
 
-            handle.buy5 = btn;
-            handle.buy5Bg = bg;
-            handle.buy5Label = label;
+            GameObject coinGo = null;
+            if (sprCoin != null)
+            {
+                coinGo = new GameObject("Coin", typeof(RectTransform), typeof(Image));
+                coinGo.transform.SetParent(go.transform, false);
+                var coin = coinGo.GetComponent<Image>();
+                coin.sprite = sprCoin; coin.preserveAspect = true; coin.raycastTarget = false;
+                Place((RectTransform)coinGo.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-TagPad, 0), new Vector2(TagCoin, TagCoin));
+            }
+
+            handle.priceBg = bg;
+            handle.priceLabel = label;
+            handle.priceCoin = coinGo;
         }
 
-        private void HandleBulkBuy(PlantData plant)
+        private const float TagPad = 8f, TagCoin = 13f, TagGap = 4f;
+
+        /// <summary>Ширина цінника = відступ + текст (+ проміжок + монета) + відступ.</summary>
+        private static void LayoutPriceTag(PlantCardHandle h, bool withCoin)
         {
-            var gm = GameManager.Instance;
-            if (gm == null || IsLevelLocked(plant) || plant.seedCost <= 0) return;
-            if (gm.TryBuySeeds(plant.plantId, plant.seedCost, BulkSeedCount))
-            {
-                _selectedPlant = plant;
-                SaveSystem.Save(gm.playerData);
-            }
-            RefreshVisuals();
+            float textW = Mathf.Ceil(h.priceLabel.GetPreferredValues(h.priceLabel.text).x);
+            float coinW = withCoin ? TagGap + TagCoin : 0f;
+            var rt = (RectTransform)h.priceBg.transform;
+            rt.sizeDelta = new Vector2(TagPad + textW + coinW + TagPad, 24);
+            var lrt = h.priceLabel.rectTransform;
+            lrt.anchorMin = new Vector2(0, 0); lrt.anchorMax = new Vector2(0, 1);
+            lrt.pivot = new Vector2(0, 0.5f);
+            lrt.anchoredPosition = new Vector2(TagPad, 0);
+            lrt.sizeDelta = new Vector2(textW, 0);
+            if (h.priceCoin != null) h.priceCoin.SetActive(withCoin);
         }
 
         private void HandlePotClick(PotData pot)
@@ -311,6 +318,11 @@ namespace PlantBreeding.UI
             else if (!pot.IsRewardOnly && gm.TryUnlockPot(pot.potId, pot.unlockCost))
             {
                 _selectedPot = pot;
+            }
+            else if (!pot.IsRewardOnly && gm.playerData.coins >= pot.unlockCost)
+            {
+                // Монет на горщик вистачає, але тоді нічого буде посадити.
+                Core.GameEvents.RaiseToast($"Залиш {gm.CheapestPlantCost} монет на рослину — горщик купиш трохи згодом");
             }
             RefreshVisuals();
         }
@@ -336,29 +348,24 @@ namespace PlantBreeding.UI
             foreach (var h in _plantCards)
             {
                 bool selected = _selectedPlant == h.plant;
-                int count = gm != null ? gm.GetSeedCount(h.plant.plantId) : 0;
-                bool inStock = count > 0;
-                bool canBuy = h.plant.seedCost > 0 && gm != null && gm.playerData.coins >= h.plant.seedCost;
+                bool free = HasFreeSeed(h.plant);
+                bool canBuy = CanAfford(h.plant);
                 bool levelLocked = IsLevelLocked(h.plant);
 
-                ApplyCardStyle(h.bg, h.border, h.group, selected, gold: false, interactable: !levelLocked && (inStock || canBuy));
+                ApplyCardStyle(h.bg, h.border, h.group, selected, gold: false, interactable: !levelLocked && (free || canBuy));
 
-                h.sub.text = levelLocked ? $"з рівня {h.plant.unlockLevel}"
-                    : inStock ? $"×{count} насіння"
-                    : h.plant.seedCost > 0 ? $"Купити · {h.plant.seedCost} монет"
-                    : "Лише зі схрещування";
-                h.sub.color = levelLocked || inStock ? UIColors.Soft : UIColors.GoldLt;
+                // Під назвою — лише «з рівня N» для закритих; ціну показує цінник у кутку.
+                h.sub.text = levelLocked ? $"з рівня {h.plant.unlockLevel}" : "";
+                h.sub.color = UIColors.Soft;
 
-                if (h.buy5 != null)
+                if (h.priceBg != null)
                 {
-                    int bulkCost = h.plant.seedCost * BulkSeedCount;
-                    bool showBulk = !levelLocked && h.plant.seedCost > 0;
-                    bool canBulk = showBulk && gm != null && gm.playerData.coins >= bulkCost;
-                    h.buy5.gameObject.SetActive(showBulk);
-                    h.buy5.interactable = canBulk;
-                    h.buy5Label.text = $"+{BulkSeedCount} · {bulkCost}";
-                    h.buy5Label.color = canBulk ? UIColors.Hex("#10160B") : UIColors.Soft;
-                    h.buy5Bg.color = canBulk ? UIColors.GoldLt : UIColors.Rgba(Color.white, 0.08f);
+                    h.priceBg.gameObject.SetActive(!levelLocked);
+                    // Подарована насінина (старт, нагороди, капсула) — посадка без оплати.
+                    h.priceLabel.text = free ? "Безкоштовно" : h.plant.seedCost.ToString();
+                    LayoutPriceTag(h, withCoin: !free && h.priceCoin != null);
+                    h.priceLabel.color = free ? UIColors.Green : canBuy ? UIColors.Text : UIColors.Soft;
+                    h.priceBg.color = UIColors.Rgba(Color.white, canBuy || free ? 0.10f : 0.05f);
                 }
             }
 
@@ -366,7 +373,7 @@ namespace PlantBreeding.UI
             {
                 bool selected = _selectedPot == h.pot;
                 bool owned = IsPotOwned(h.pot);
-                bool canUnlock = !owned && !h.pot.IsRewardOnly && gm != null && gm.playerData.coins >= h.pot.unlockCost;
+                bool canUnlock = !owned && !h.pot.IsRewardOnly && gm != null && gm.CanSpendKeepingPlantMoney(h.pot.unlockCost);
 
                 ApplyCardStyle(h.bg, h.border, h.group, selected, gold: h.pot.premiumVisual && !selected, interactable: owned || canUnlock || h.pot.IsShopPot);
 
@@ -402,6 +409,17 @@ namespace PlantBreeding.UI
         private static bool IsLevelLocked(PlantData plant) =>
             GameManager.Instance != null && plant.unlockLevel > GameManager.Instance.playerData.level
             && GameManager.Instance.GetSeedCount(plant.plantId) <= 0;
+
+        /// <summary>Є подарована насінина цього виду (старт, нагороди, капсула) — посадка без оплати.</summary>
+        private static bool HasFreeSeed(PlantData plant) =>
+            GameManager.Instance != null && GameManager.Instance.GetSeedCount(plant.plantId) > 0;
+
+        private static bool CanAfford(PlantData plant) =>
+            plant.seedCost > 0 && GameManager.Instance != null && GameManager.Instance.playerData.coins >= plant.seedCost;
+
+        /// <summary>Скільки монет зніме посадка: рослина (якщо не подарована) + добриво.</summary>
+        private int PlantingCost(PlantData plant) =>
+            (HasFreeSeed(plant) ? 0 : plant.seedCost) + StarterBoostCatalog.Get(_selectedBoost).coinCost;
 
         private static void ApplyCardStyle(Image bg, Image border, CanvasGroup group, bool selected, bool gold, bool interactable)
         {
@@ -456,27 +474,37 @@ namespace PlantBreeding.UI
                 previewPotGlyph.color = _selectedPot.colorMid;
             }
 
-            if (plantButton != null) plantButton.interactable = hasPlant;
+            int cost = hasPlant ? PlantingCost(_selectedPlant) : 0;
+            bool affordable = hasPlant && GameManager.Instance != null && GameManager.Instance.playerData.coins >= cost;
+            if (plantButton != null) plantButton.interactable = affordable;
             if (plantButtonLabel != null)
-                plantButtonLabel.text = hasPlant
-                    ? $"Посадити {_selectedPlant.displayName.ToLower()}"
-                    : "Оберіть рослину";
+                plantButtonLabel.text = !hasPlant ? "Оберіть рослину"
+                    : cost > 0 ? $"Посадити · {cost} монет"
+                    : "Посадити";
 
             if (!hasPlant) return;
 
             var forecast = PlantingForecast.Compute(_selectedPlant, _selectedPot, _selectedBoost);
-            if (growLabel != null) growLabel.text = forecast.GrowLabel;
-            if (sellLabel != null) sellLabel.text = forecast.sellPrice.ToString();
+            // Два рядки «Підпис: значення» з кожного боку (звичайний текст — так його
+            // перекладає LocalizationApplier за шаблонами «Час росту: {0}» тощо).
+            if (growLabel != null) growLabel.text = $"Час росту: {TimeFormat.Remaining(forecast.growTimeSeconds)}";
+            if (sellLabel != null) sellLabel.text = $"Отримаю: {forecast.sellPrice} монет";
 
+            bool hasBoost = _selectedBoost != StarterBoostKind.None;
             float growModPercent = ((_selectedPot != null ? _selectedPot.growTimeModifier : 0f)
                 + StarterBoostCatalog.Get(_selectedBoost).growTimeModifier) * 100f;
             if (growNoteLabel != null)
-                growNoteLabel.text = Mathf.Abs(growModPercent) > 0.1f ? $"{growModPercent:+0;-0}% модиф." : "базовий";
+            {
+                string value = Mathf.Abs(growModPercent) > 0.1f ? $"{growModPercent:+0;−0}% часу" : "базовий";
+                growNoteLabel.text = hasBoost ? $"Горщик і добриво: {value}" : $"Горщик: {value}";
+            }
 
             if (sellNoteLabel != null)
             {
                 float potSell = _selectedPot != null ? _selectedPot.sellPriceBonus : 0f;
-                sellNoteLabel.text = potSell > 0.001f ? $"+{potSell * 100f:0}% горщик" : "+полив до 30%";
+                sellNoteLabel.text = potSell > 0.001f
+                    ? $"Бонус: горщик +{Mathf.RoundToInt(potSell * 100f)}%, полив до +30%"
+                    : "Бонус: полив до +30%";
             }
         }
 
@@ -487,11 +515,13 @@ namespace PlantBreeding.UI
         {
             if (_selectedPlant == null || GameManager.Instance == null) return;
 
-            int boostCost = StarterBoostCatalog.Get(_selectedBoost).coinCost;
-            if (GameManager.Instance.playerData.coins < boostCost) return; // картка мала бути задизейблена раніше
-
-            if (!GameManager.Instance.TryConsumeSeed(_selectedPlant.plantId)) return;
-            GameManager.Instance.TrySpendCoins(boostCost);
+            // Одна рослина: подарована насінина — безкоштовно, інакше ціна рослини; плюс добриво.
+            var gm = GameManager.Instance;
+            int cost = PlantingCost(_selectedPlant);
+            if (gm.playerData.coins < cost) return; // кнопка мала бути неактивна
+            bool free = HasFreeSeed(_selectedPlant);
+            if (free && !gm.TryConsumeSeed(_selectedPlant.plantId)) return;
+            if (cost > 0 && !gm.TrySpendCoins(cost)) return;
 
             GameManager.Instance.SetLastUsedPot(_selectedPot != null ? _selectedPot.potId : "");
             PlantingRequest.TargetSlot?.Plant(_selectedPlant, _selectedPot, _selectedBoost);

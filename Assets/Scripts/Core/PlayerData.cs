@@ -121,6 +121,16 @@ namespace PlantBreeding.Core
         // 2 = як у системі; мова — "uk" / "en" / "pl" (Localization.Loc).
         public int themeMode = 0;
         public string language = "uk";
+
+        // ── Хмара (Cloud/CloudService, Firebase) ─────────────────────────
+        // Момент останнього збереження (ігровий час GameClock) — порівнюється з хмарною копією.
+        public double savedAtUnixSeconds;
+        // Акаунт Firebase, з яким цей прогрес востаннє синхронізовано, і savedAt
+        // хмарної копії на той момент: якщо в хмарі інший savedAt — її змінив інший пристрій.
+        public string cloudUid = "";
+        public double cloudSyncedSavedAt;
+        // Прив'язаний Google-акаунт (для показу в Профілі); порожньо — гість.
+        public string cloudEmail = "";
     }
 
     [Serializable]
@@ -193,6 +203,9 @@ namespace PlantBreeding.Core
         public double lastWateredUnixSeconds;
         public int wateredCount;
         public bool speedUpUsed;
+        // Світло (екран догляду): останнє «сонце» (або посадка) і скільки разів дано.
+        public double lastSunUnixSeconds;
+        public int sunCount;
 
         // Хвороба/шкідник (Garden/PlantAilments): запланована або поточна.
         public int ailment;

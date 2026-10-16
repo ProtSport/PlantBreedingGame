@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: monstera
   displayName: "\u041C\u043E\u043D\u0441\u0442\u0435\u0440\u0430"
-  growTimeSeconds: 25200
-  waterDepleteSeconds: 6300
+  growTimeSeconds: 10800
+  waterDepleteSeconds: 2700
   sprite25: {fileID: 3286163911610860551, guid: 8088dbe2618449dfa2f849cb22c4b5b8, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 95e2982042fc4bccac849feb4223da39, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: b1b08758bb224a06a1d675280785e5a9, type: 3}

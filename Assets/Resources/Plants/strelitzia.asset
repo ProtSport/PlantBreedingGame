@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: strelitzia
   displayName: "\u0421\u0442\u0440\u0435\u043B\u0456\u0446\u0456\u044F"
-  growTimeSeconds: 57600
-  waterDepleteSeconds: 14400
+  growTimeSeconds: 28800
+  waterDepleteSeconds: 7200
   sprite25: {fileID: 3286163911610860551, guid: 6f6fe6cf2b7f46bbaabed12c872fcdba, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: addf888427c245019cea274befc0623a, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 53017314af9d472b91bea357c4a5ab68, type: 3}

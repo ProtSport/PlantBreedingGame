@@ -1,6 +1,12 @@
 {
   "dependencies": {
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.google.external-dependency-manager": "file:../GooglePackages/external-dependency-manager",
+    "com.google.firebase.analytics": "file:../GooglePackages/analytics",
+    "com.google.firebase.app": "file:../GooglePackages/app",
+    "com.google.firebase.auth": "file:../GooglePackages/auth",
+    "com.google.firebase.crashlytics": "file:../GooglePackages/crashlytics",
+    "com.google.firebase.firestore": "file:../GooglePackages/firestore",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.inputsystem": "1.11.0",
     "com.unity.mobile.notifications": "2.5.0",

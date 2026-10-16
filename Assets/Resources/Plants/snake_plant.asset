@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: snake_plant
   displayName: "\u0421\u0430\u043D\u0441\u0435\u0432'\u0454\u0440\u0456\u044F"
-  growTimeSeconds: 2700
-  waterDepleteSeconds: 675
+  growTimeSeconds: 600
+  waterDepleteSeconds: 150
   sprite25: {fileID: 3286163911610860551, guid: 9a4368c24d1a4c2fb9aaac3f00ae2d9c, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 62958910e39c4faf972841548ea0bb40, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 73d693999e7240acb88a44897d16d3ad, type: 3}

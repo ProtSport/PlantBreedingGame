@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "9543369297",
+    "project_id": "plantbreeding-4535c",
+    "storage_bucket": "plantbreeding-4535c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:9543369297:android:1cada9b7cf6fd21fe52e70",
+        "android_client_info": {
+          "package_name": "com.protsport.plantbreeding"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "9543369297-vqjhkgu7e2s5q0n4mmuisu3a8r0tqr0m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.protsport.plantbreeding",
+            "certificate_hash": "5e0a20681f903f027519414a1a7b927052a4b1c2"
+          }
+        },
+        {
+          "client_id": "9543369297-r7lsm9pprgjcdvtgl8bdrh7n749bp8f0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1HoGBIiLa3wiu-f7WNy8KJ8mUiZ4Q8I4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "9543369297-r7lsm9pprgjcdvtgl8bdrh7n749bp8f0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "9543369297-a1nk95fpommocl2e3gdoavjul39elb69.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.protsport.plantbreeding"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

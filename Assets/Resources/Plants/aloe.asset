@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: aloe
   displayName: "\u0410\u043B\u043E\u0435"
-  growTimeSeconds: 1200
-  waterDepleteSeconds: 300
+  growTimeSeconds: 180
+  waterDepleteSeconds: 360
   sprite25: {fileID: 3286163911610860551, guid: 1225c515ed574cf880a20139cfd6dc1a, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: cacaeafbaf2740809c11090ed7a61f60, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 9b1bcfd6891d4949b4acbe6821aba8b0, type: 3}

@@ -227,7 +227,7 @@ namespace PlantBreeding.UI
             RefreshSettings();
         }
 
-        private void CloseSettings()
+        internal void CloseSettings()
         {
             if (_settingsSheet != null) _settingsSheet.SetActive(false);
         }

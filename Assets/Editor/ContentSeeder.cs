@@ -39,29 +39,30 @@ namespace PlantBreeding.EditorTools
         // але монети не накопичуються понад те, що з'їдають Лабораторія і горщики.
         // Відкриваються поступово: 2 на рівні 1, далі по одній–дві на рівень до 18.
         // Короткі рослини = активна гра, довгі = «посадив увечері — зібрав вранці».
+        // Час росту (2026-10-10): 30 с, 1, 3, 5, 10, 15, 20, 30, 45 хв, далі 1–10 год.
         // Полив раз на чверть часу росту → до 3 поливів за бонус до ціни.
         static readonly (string id, string name, int lvl, int seed, float growMin, int sell, int xp, PlantRarity rarity, string tint)[] Plants =
         {
-            ("violet",          "Фіалка",            1,   8,    3,  12,   8, PlantRarity.Common,    "#E6D2FF"),
-            ("cactus",          "Кактус",            1,  12,   10,  18,  12, PlantRarity.Common,    "#D8F0B8"),
-            ("aloe",            "Алое",              2,  18,   20,  27,  18, PlantRarity.Common,    "#CFEFD6"),
-            ("spider_plant",    "Хлорофітум",        2,  25,   30,  37,  24, PlantRarity.Common,    "#EAF7C8"),
-            ("snake_plant",     "Сансев'єрія",       3,  32,   45,  47,  30, PlantRarity.Common,    "#D6E8B0"),
-            ("zz_plant",        "Заміокулькас",      4,  40,   60,  58,  36, PlantRarity.Common,    "#BFE3A8"),
-            ("pothos",          "Епіпремнум",        5,  50,   90,  72,  45, PlantRarity.Common,    "#E4F5A8"),
-            ("peace_lily",      "Спатифілум",        6,  60,  120,  86,  55, PlantRarity.Rare,      "#F4FAF0"),
-            ("ficus",           "Фікус Бенджаміна",  7,  70,  150,  99,  62, PlantRarity.Rare,      "#CDE6B4"),
-            ("begonia",         "Бегонія",           8,  80,  180, 112,  70, PlantRarity.Rare,      "#FFC9C2"),
-            ("calathea",        "Калатея",           9,  95,  240, 132,  82, PlantRarity.Rare,      "#C8E0C8"),
-            ("geranium",        "Пеларгонія",       10, 110,  300, 152,  95, PlantRarity.Rare,      "#FFB8B0"),
-            ("anthurium",       "Антуріум",         11, 125,  360, 172, 105, PlantRarity.Rare,      "#FFB0B8"),
-            ("monstera",        "Монстера",         12, 140,  420, 191, 115, PlantRarity.Epic,      "#B8E0A0"),
-            ("hibiscus",        "Гібіскус",         13, 160,  480, 216, 125, PlantRarity.Epic,      "#FFC0CC"),
-            ("azalea",          "Азалія",           14, 185,  600, 248, 140, PlantRarity.Epic,      "#FFC8E4"),
-            ("fiddle_leaf_fig", "Фікус ліровидний", 15, 210,  720, 280, 155, PlantRarity.Epic,      "#C4E4A8"),
-            ("gardenia",        "Гарденія",         16, 240,  840, 317, 170, PlantRarity.Epic,      "#FFF8E8"),
-            ("strelitzia",      "Стреліція",        17, 270,  960, 354, 185, PlantRarity.Legendary, "#FFD8A0"),
-            ("orchid",          "Орхідея",          18, 320, 1200, 416, 210, PlantRarity.Legendary, "#F0D0FF"),
+            ("violet",          "Фіалка",            1,   8,    0.5f,  12,   8, PlantRarity.Common,    "#E6D2FF"),
+            ("cactus",          "Кактус",            1,  12,    1,  18,  12, PlantRarity.Common,    "#D8F0B8"),
+            ("aloe",            "Алое",              2,  18,    3,  27,  18, PlantRarity.Common,    "#CFEFD6"),
+            ("spider_plant",    "Хлорофітум",        2,  25,    5,  37,  24, PlantRarity.Common,    "#EAF7C8"),
+            ("snake_plant",     "Сансев'єрія",       3,  32,   10,  47,  30, PlantRarity.Common,    "#D6E8B0"),
+            ("zz_plant",        "Заміокулькас",      4,  40,   15,  58,  36, PlantRarity.Common,    "#BFE3A8"),
+            ("pothos",          "Епіпремнум",        5,  50,   20,  72,  45, PlantRarity.Common,    "#E4F5A8"),
+            ("peace_lily",      "Спатифілум",        6,  60,   30,  86,  55, PlantRarity.Rare,      "#F4FAF0"),
+            ("ficus",           "Фікус Бенджаміна",  7,  70,   45,  99,  62, PlantRarity.Rare,      "#CDE6B4"),
+            ("begonia",         "Бегонія",           8,  80,   60, 112,  70, PlantRarity.Rare,      "#FFC9C2"),
+            ("calathea",        "Калатея",           9,  95,   90, 132,  82, PlantRarity.Rare,      "#C8E0C8"),
+            ("geranium",        "Пеларгонія",       10, 110,  120, 152,  95, PlantRarity.Rare,      "#FFB8B0"),
+            ("anthurium",       "Антуріум",         11, 125,  150, 172, 105, PlantRarity.Rare,      "#FFB0B8"),
+            ("monstera",        "Монстера",         12, 140,  180, 191, 115, PlantRarity.Epic,      "#B8E0A0"),
+            ("hibiscus",        "Гібіскус",         13, 160,  240, 216, 125, PlantRarity.Epic,      "#FFC0CC"),
+            ("azalea",          "Азалія",           14, 185,  300, 248, 140, PlantRarity.Epic,      "#FFC8E4"),
+            ("fiddle_leaf_fig", "Фікус ліровидний", 15, 210,  360, 280, 155, PlantRarity.Epic,      "#C4E4A8"),
+            ("gardenia",        "Гарденія",         16, 240,  420, 317, 170, PlantRarity.Epic,      "#FFF8E8"),
+            ("strelitzia",      "Стреліція",        17, 270,  480, 354, 185, PlantRarity.Legendary, "#FFD8A0"),
+            ("orchid",          "Орхідея",          18, 320,  600, 416, 210, PlantRarity.Legendary, "#F0D0FF"),
         };
 
         static void SeedPlants()

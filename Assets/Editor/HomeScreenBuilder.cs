@@ -21,6 +21,10 @@ namespace PlantBreeding.EditorTools
     /// </summary>
     public static class HomeScreenBuilder
     {
+        // Плитка грядки: текстова колонка ліворуч (до 58% ширини), рослина — по центру правої частини.
+        const float TextColumnRight = 0.58f;
+        const float PlantCenterX = 0.74f;
+
         const string ScenePath = "Assets/Scenes/MainGarden.unity";
         const string PrefabDir = "Assets/Prefabs";
         const string PrefabPath = PrefabDir + "/PlotSlot.prefab";
@@ -120,6 +124,13 @@ namespace PlantBreeding.EditorTools
             economy.sprPill = LoadSprite("pill-16");
             economy.sprPillLine = LoadSprite("pill-16-line");
             economy.sprCircle = LoadSprite("circle-fill");
+            economy.sprCard = LoadSprite("rounded-24");
+            economy.sprCardLine = LoadSprite("rounded-24-line");
+            economy.sprSmallLine = LoadSprite("rounded-12-line");
+            economy.sprSmall = LoadSprite("rounded-12");
+            economy.sprGlow = LoadSprite("glow");
+            economy.sprCoin = LoadSprite("icon-coin", SvgDir);
+            economy.sprScroll = LoadSprite("notify-scroll", SvgDir);
             economy.fontHead = FontHead;
             economy.fontUi = FontUi;
 
@@ -181,13 +192,17 @@ namespace PlantBreeding.EditorTools
         // ── Сітка грядок 2 × 3 (реальна, керована GardenManager) ─────────
         static GardenManager BuildGrid(Transform root, GameObject gmGO)
         {
-            // Скрол: 6 грядок влазять без прокрутки, 7-ма/8-ма (Крамниця) — четвертий ряд.
+            // Сітка 2×4: GridCellFitter підганяє висоту клітинок, щоб усі 8 грядок
+            // влазили між шапкою й меню (з урахуванням safe area). Скрол лишається
+            // запасним — на дуже низьких екранах клітинка не менша за мінімум.
             var scroll = new GameObject("GridScroll", typeof(RectTransform), typeof(ScrollRect));
             scroll.transform.SetParent(root, false);
             var rt = (RectTransform)scroll.transform;
             rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 1);
-            rt.offsetMin = new Vector2(16, 118);
-            rt.offsetMax = new Vector2(-16, -190);
+            // Межі підібрані знімками екранів (Editor/ScreenAudit): усі 8 грядок
+            // влазять і на iPhone 14 з вирізом, і на iPhone SE, і на iPad.
+            rt.offsetMin = new Vector2(16, 110);
+            rt.offsetMax = new Vector2(-16, -176);
 
             var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D), typeof(Image));
             viewport.transform.SetParent(scroll.transform, false);
@@ -211,14 +226,18 @@ namespace PlantBreeding.EditorTools
 
             var gl = grid.AddComponent<GridLayoutGroup>();
             gl.cellSize = new Vector2(173, 170);
-            gl.spacing = new Vector2(12, 12);
+            gl.spacing = new Vector2(10, 10);
             gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             gl.constraintCount = 2;
             gl.childAlignment = TextAnchor.UpperCenter;
+            var fitter = grid.AddComponent<GridCellFitter>();
+            fitter.columns = 2;
+            fitter.rows = 4;
+            fitter.minCellHeight = 76;
 
             var prefab = AssetDatabase.LoadAssetAtPath<PlotSlotView>(PrefabPath);
             var gardenManager = gmGO.AddComponent<GardenManager>();
-            gardenManager.gridSize = 6;
+            gardenManager.gridSize = 8;
             gardenManager.initiallyUnlocked = 4;
             gardenManager.plotViewPrefab = prefab;
             gardenManager.gridParent = grid.transform;
@@ -290,7 +309,10 @@ namespace PlantBreeding.EditorTools
                 var bLine = MakeImage("Border", box.transform, LoadSprite("rounded-12-line"), Rgba(ColGreen, 0.34f), Image.Type.Sliced);
                 Stretch(bLine.rectTransform);
             }
-            var ico = MakeImage("Icon", box.transform, LoadSprite(icon, SvgDir), Color.white, Image.Type.Simple);
+            // Іконки меню білі (Art/SVG/nav-*.svg) — колір задаємо тут: активна вкладка
+            // яскраво-зелена, решта приглушені.
+            var ico = MakeImage("Icon", box.transform, LoadSprite(icon, SvgDir),
+                active ? ColGreenBr : Rgba(ColTextMut, 0.75f), Image.Type.Simple);
             ico.preserveAspect = true;
             Place(ico.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(22, 22));
 
@@ -322,10 +344,10 @@ namespace PlantBreeding.EditorTools
 
             var glow = MakeImage("Glow", tile.transform, LoadSprite("glow"), Rgba(ColGreen, 0.22f), Image.Type.Simple);
             var grt = glow.rectTransform;
-            grt.anchorMin = grt.anchorMax = new Vector2(0.5f, 0);
+            grt.anchorMin = grt.anchorMax = new Vector2(PlantCenterX, 0); // під рослиною (праворуч)
             grt.pivot = new Vector2(0.5f, 0.5f);
-            grt.anchoredPosition = new Vector2(0, 10);
-            grt.sizeDelta = new Vector2(200, 130);
+            grt.anchoredPosition = new Vector2(0, 14);
+            grt.sizeDelta = new Vector2(170, 130);
             glow.gameObject.SetActive(false);
 
             // ── EmptyGroup: "+" Посадити ──────────────────────────────────
@@ -334,7 +356,7 @@ namespace PlantBreeding.EditorTools
             Stretch((RectTransform)emptyGroup.transform);
 
             var circle = MakeImage("PlusCircle", emptyGroup.transform, LoadSprite("circle-fill"), Rgba(ColGreen, 0.14f), Image.Type.Simple);
-            Place(circle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 14), new Vector2(40, 40));
+            Place(circle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 12), new Vector2(36, 36));
             var cLine = MakeImage("Ring", circle.transform, LoadSprite("circle-line"), Rgba(ColGreen, 0.32f), Image.Type.Simple);
             Stretch(cLine.rectTransform);
             var plus = MakeLabel("Plus", circle.transform, "+", FontUi, 22, ColGreen, FontStyles.Normal);
@@ -351,10 +373,10 @@ namespace PlantBreeding.EditorTools
 
             var lockIcon = MakeImage("LockIcon", lockedGroup.transform, LoadSprite("icon-lock", SvgDir), Rgba(Color.white, 0.28f), Image.Type.Simple);
             lockIcon.preserveAspect = true;
-            Place(lockIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 12), new Vector2(34, 34));
+            Place(lockIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 16), new Vector2(28, 28));
             var lockedLbl = MakeLabel("Label", lockedGroup.transform, "Заблоковано", FontUi, 11, Hex("#6E7A64"), FontStyles.Bold);
             // 2 рядки: "Рівень N" / "або X монет" (EconomyService.LockedPlotLabel).
-            Place(lockedLbl.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -32), new Vector2(150, 32));
+            Place(lockedLbl.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -20), new Vector2(150, 32));
             lockedLbl.alignment = TextAlignmentOptions.Center;
 
             // ── ContentGroup: рослина + чіп + назва + прогрес ────────────
@@ -365,10 +387,16 @@ namespace PlantBreeding.EditorTools
             var plant = MakeImage("Plant", contentGroup.transform, LoadSprite("plant-stage-5", SvgDir), Color.white, Image.Type.Simple);
             plant.preserveAspect = true;
             var prt = plant.rectTransform;
-            prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0);
+            // Плитка широка й низька, а полотно арту 200×260 високе: рослина стоїть
+            // праворуч на всю висоту плитки (назва, таймер і прогрес — ліворуч).
+            // Горщик — біля низу полотна, а верхні ~26% полотна порожні навіть у
+            // найвищої дорослої рослини, тому прямокутник вищий за плитку (×1.3):
+            // доросла рослина якраз сягає верху, а паросток виходить удвічі більшим.
+            // Висота плитки залежить від екрана (GridCellFitter); зайве обрізає RectMask2D.
+            prt.anchorMin = new Vector2(PlantCenterX, 0); prt.anchorMax = new Vector2(PlantCenterX, 1.3f);
             prt.pivot = new Vector2(0.5f, 0);
-            prt.anchoredPosition = new Vector2(0, 28);
-            prt.sizeDelta = new Vector2(100, 100 * 260f / 200f); // полотно арту 200×260
+            prt.offsetMin = new Vector2(-62, 9);  // низ горщика — на рівні смужки прогресу (9–13)
+            prt.offsetMax = new Vector2(62, -6);
 
             // Хвороби: маска по силуету «тільки рослина» + оверлей усередині (тля,
             // роса, хлороз) і окремо павутина кліща. Однакове полотно 200×260 і
@@ -418,21 +446,21 @@ namespace PlantBreeding.EditorTools
             var chipText = MakeLabel("Text", chip.transform, "Росте", FontUi, 10, ColChipGrow, FontStyles.Bold);
             chipText.alignment = TextAlignmentOptions.MidlineLeft;
 
-            var nameLabel = MakeLabel("Name", contentGroup.transform, "Рослина", FontHead, 18, ColText, FontStyles.Normal);
+            var nameLabel = MakeLabel("Name", contentGroup.transform, "Рослина", FontHead, 16, ColText, FontStyles.Normal);
             var nrt = nameLabel.rectTransform;
-            nrt.anchorMin = new Vector2(0, 0); nrt.anchorMax = new Vector2(1, 0);
+            nrt.anchorMin = new Vector2(0, 0); nrt.anchorMax = new Vector2(TextColumnRight, 0);
             nrt.pivot = new Vector2(0, 0);
-            nrt.anchoredPosition = new Vector2(12, 18);
-            nrt.sizeDelta = new Vector2(-24, 20);
+            nrt.offsetMin = new Vector2(12, 18);
+            nrt.offsetMax = new Vector2(0, 38);
             nameLabel.alignment = TextAlignmentOptions.BottomLeft;
+            nameLabel.enableAutoSizing = true; nameLabel.fontSizeMin = 11; nameLabel.fontSizeMax = 16;
 
             var track = MakeImage("ProgressTrack", contentGroup.transform, LoadSprite("pill-tiny"), Rgba(Color.white, 0.10f), Image.Type.Sliced);
             var trt = track.rectTransform;
-            trt.anchorMin = new Vector2(0, 0); trt.anchorMax = new Vector2(1, 0);
+            trt.anchorMin = new Vector2(0, 0); trt.anchorMax = new Vector2(TextColumnRight, 0);
             trt.pivot = new Vector2(0.5f, 0);
-            trt.anchoredPosition = new Vector2(0, 9);
             trt.offsetMin = new Vector2(12, 9);
-            trt.offsetMax = new Vector2(-12, 13);
+            trt.offsetMax = new Vector2(0, 13);
 
             var fill = MakeImage("Fill", track.transform, LoadSprite("pill-tiny"), ColGreen, Image.Type.Sliced);
             var frt = fill.rectTransform;

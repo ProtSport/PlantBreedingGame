@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: pothos
   displayName: "\u0415\u043F\u0456\u043F\u0440\u0435\u043C\u043D\u0443\u043C"
-  growTimeSeconds: 5400
-  waterDepleteSeconds: 1350
+  growTimeSeconds: 1200
+  waterDepleteSeconds: 300
   sprite25: {fileID: 3286163911610860551, guid: 90bd2c3d21b14a8d823dbeaf85a3ae70, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 2864147d91774729bf936d489846b4bb, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: dfb606c6aa44417bbdadbe4b044b194f, type: 3}

@@ -102,6 +102,7 @@ namespace PlantBreeding.UI
             lockedHint.text = "Заблоковані — нагороди Завдань тижня";
             BuildSectionHead(contentRoot, "Рамки профілю", out var frameCountLabel);
             BuildFrameGrid(contentRoot);
+            BuildCloudSection(contentRoot);
 
             _avatarCountLabel = avatarCountLabel;
             _frameCountLabel = frameCountLabel;
@@ -298,6 +299,87 @@ namespace PlantBreeding.UI
             }
         }
 
+        // ── Збереження в хмарі (Cloud/CloudService) ──────────────────────
+        private TMP_Text _cloudStatus, _cloudHint;
+        private Button _cloudButton, _appleButton;
+
+        private void BuildCloudSection(Transform parent)
+        {
+            BuildSectionHead(parent, "Збереження", out var unused);
+            unused.text = "";
+
+            var card = new GameObject("CloudCard", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(LayoutElement));
+            card.transform.SetParent(parent, false);
+            var bg = card.GetComponent<Image>();
+            bg.sprite = sprRoundedCard; bg.type = Image.Type.Sliced; bg.color = Rgba(Color.white, 0.05f);
+            card.GetComponent<LayoutElement>().preferredHeight = 128;
+            var vl = card.GetComponent<VerticalLayoutGroup>();
+            vl.padding = new RectOffset(14, 14, 12, 12); vl.spacing = 6;
+            vl.childAlignment = TextAnchor.UpperLeft;
+            vl.childControlWidth = true; vl.childControlHeight = true;
+            vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+            var border = MakeImage(card.transform, "Border", sprRoundedCardLine, Rgba(Color.white, 0.1f), Image.Type.Sliced);
+            Stretch(border.rectTransform);
+            border.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            _cloudStatus = MakeLabel(card.transform, "Status", "", fontUi, 13, ColText, FontStyles.Bold);
+            _cloudStatus.enableAutoSizing = true; _cloudStatus.fontSizeMin = 10; _cloudStatus.fontSizeMax = 13;
+            _cloudStatus.gameObject.AddComponent<LayoutElement>().preferredHeight = 18;
+
+            _cloudHint = MakeLabel(card.transform, "Hint", "", fontUi, 11, ColMut, FontStyles.Normal);
+            _cloudHint.textWrappingMode = TextWrappingModes.Normal;
+            _cloudHint.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
+
+            var btnRow = MakeRow(card.transform, 38, 8);
+            // iPhone: «Sign in with Apple» обов'язковий поруч із Google (App Review 4.8) і
+            // не менш помітний — тому першим і в стилі Apple (біла кнопка з чорним текстом).
+            _appleButton = MakeActionButton(btnRow.transform, "Увійти з Apple");
+            _appleButton.GetComponent<LayoutElement>().preferredWidth = 150;
+            _appleButton.GetComponent<Image>().color = Color.white;
+            _appleButton.GetComponentInChildren<TMP_Text>().color = Color.black;
+            _appleButton.onClick.AddListener(() => OnCloudButton(apple: true));
+            _appleButton.gameObject.SetActive(Cloud.AppleSignInBridge.IsSupported);
+
+            _cloudButton = MakeActionButton(btnRow.transform, "Увійти через Google");
+            _cloudButton.GetComponent<LayoutElement>().preferredWidth = Cloud.AppleSignInBridge.IsSupported ? 160 : 200;
+            _cloudButton.GetComponent<Image>().color = Rgba(ColGreen, 0.22f);
+            _cloudButton.onClick.AddListener(() => OnCloudButton(apple: false));
+        }
+
+        private void OnEnable() => Cloud.CloudService.Changed += RefreshCloud;
+        private void OnDisable() => Cloud.CloudService.Changed -= RefreshCloud;
+
+        private void RefreshCloud()
+        {
+            if (_cloudStatus == null) return;
+            var state = Cloud.CloudService.State;
+            _cloudStatus.text = Cloud.CloudService.StatusLine;
+            bool linked = state == Cloud.CloudState.Linked;
+            _cloudHint.text = linked
+                ? "Сад переживе перевстановлення гри й новий телефон — просто увійди тим самим акаунтом."
+                : Cloud.AppleSignInBridge.IsSupported
+                    ? "Увійди з Apple або Google, щоб сад не загубився при заміні телефона чи перевстановленні гри."
+                    : "Увійди через Google, щоб сад не загубився при заміні телефона чи перевстановленні гри.";
+            bool canLink = !linked && (state == Cloud.CloudState.Guest || state == Cloud.CloudState.Error);
+            _cloudButton.gameObject.SetActive(!linked);
+            _cloudButton.interactable = canLink && Cloud.GoogleSignInBridge.IsSupported;
+            _appleButton.gameObject.SetActive(!linked && Cloud.AppleSignInBridge.IsSupported);
+            _appleButton.interactable = canLink;
+        }
+
+        private void OnCloudButton(bool apple)
+        {
+            _cloudButton.interactable = false;
+            _appleButton.interactable = false;
+            System.Action<bool, string> done = (ok, message) =>
+            {
+                if (!string.IsNullOrEmpty(message)) ShowToast(message);
+                RefreshCloud();
+            };
+            if (apple) Cloud.CloudService.SignInWithApple(done);
+            else Cloud.CloudService.SignInWithGoogle(done);
+        }
+
         private GameObject MakeCheckBadge(Transform parent)
         {
             var badge = MakeImage(parent, "CheckBadge", sprCircleFill, ColGreenDeep, Image.Type.Simple);
@@ -372,6 +454,7 @@ namespace PlantBreeding.UI
                 cell.label.color = active ? Hex(cell.def.colorHex) : ColMut;
             }
             _frameCountLabel.text = $"{frOwned} з {_frameCells.Count}";
+            RefreshCloud();
         }
 
         private static Color TierColor(string tier) => tier switch

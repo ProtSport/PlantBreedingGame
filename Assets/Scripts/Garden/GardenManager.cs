@@ -10,7 +10,7 @@ namespace PlantBreeding.Garden
 {
     /// <summary>
     /// Головний контролер екрану "Мій сад" (розділ 5.1 GDD).
-    /// MVP: одна зона, 6 слотів (2×3). Які з них відкриті — EconomyService
+    /// MVP: одна зона, 8 слотів (2×4). Які з них відкриті — EconomyService
     /// (рівень гравця або покупка за монети). Стан грядок відновлюється зі
     /// збереження і записується після кожної зміни стану.
     /// Прив'язується до Canvas сцени MainGarden.
@@ -18,9 +18,11 @@ namespace PlantBreeding.Garden
     public class GardenManager : MonoBehaviour
     {
         private const string PlantingSceneName = "Planting";
+        public const string CareSceneName = "Care";
 
         [Header("Налаштування сітки")]
-        public int gridSize = 6;
+        [Tooltip("Усього грядок у сітці 2×4: 6 за рівнем/монети + 7-ма й 8-ма з Крамниці")]
+        public int gridSize = 8;
         [Tooltip("Застаріле: відкритість грядок тепер визначає EconomyConfig.PlotRules")]
         public int initiallyUnlocked = 4;
 
@@ -33,7 +35,7 @@ namespace PlantBreeding.Garden
 
         public IReadOnlyList<PlotSlot> Plots => _plots;
 
-        /// <summary>Тап на рослину, що росте → EconomyOverlayView показує вікно прискорення.</summary>
+        /// <summary>Тап на рослину, що росте → EconomyOverlayView показує картку рослини.</summary>
         public static event System.Action<PlotSlot> GrowingPlotTapped;
 
         /// <summary>Тап на хвору рослину → EconomyOverlayView показує вікно лікування.</summary>
@@ -49,14 +51,16 @@ namespace PlantBreeding.Garden
         {
             Current = this;
             GameEvents.OnLevelUp += HandleLevelUp;
-            Shop.ShopService.Changed += AddPurchasedPlots;
+            Shop.ShopService.Changed += HandleShopChanged;
+            Shop.StoreGateway.StoreUpdated += HandleShopChanged;
         }
 
         private void OnDisable()
         {
             if (Current == this) Current = null;
             GameEvents.OnLevelUp -= HandleLevelUp;
-            Shop.ShopService.Changed -= AddPurchasedPlots;
+            Shop.ShopService.Changed -= HandleShopChanged;
+            Shop.StoreGateway.StoreUpdated -= HandleShopChanged;
         }
 
         private void Start()
@@ -91,28 +95,19 @@ namespace PlantBreeding.Garden
             }
         }
 
-        /// <summary>Базові 6 грядок + куплені в Крамниці (7-ма, 8-ма).</summary>
-        private int TargetPlotCount
-        {
-            get
-            {
-                var data = GameManager.Instance != null ? GameManager.Instance.playerData : null;
-                return gridSize + (data != null ? Shop.ShopService.ExtraPlotCount(data) : 0);
-            }
-        }
-
         private void BuildGrid()
         {
-            for (int i = 0; i < TargetPlotCount; i++) AddSlot(i);
+            for (int i = 0; i < gridSize; i++) AddSlot(i);
         }
 
-        /// <summary>Грядку куплено в Крамниці, поки сад відкритий під нею, — дорисувати.</summary>
-        private void AddPurchasedPlots()
+        /// <summary>
+        /// Грядку куплено в Крамниці (поки сад відкритий під нею) або завантажились
+        /// ціни магазину — відкрити куплені й оновити підписи «Крамниця · ціна».
+        /// </summary>
+        private void HandleShopChanged()
         {
-            int target = TargetPlotCount;
-            if (_plots.Count >= target) return;
-            for (int i = _plots.Count; i < target; i++) AddSlot(i);
-            GameEvents.RaisePlotStateChanged(-1);
+            RefreshUnlocks();
+            foreach (var view in _views) view.Redraw();
         }
 
         private void AddSlot(int i)
@@ -152,7 +147,7 @@ namespace PlantBreeding.Garden
                 coins += plot.Harvest(silent: true);
                 count++;
             }
-            if (count > 0) GameEvents.RaiseToast($"Зібрано {count} {PlantsWord(count)}: +{coins} монет");
+            if (count > 0) GameEvents.RaiseSale(null, $"Зібрано {count} {PlantsWord(count)}", coins);
         }
 
         private static string PlantsWord(int n)
@@ -197,14 +192,28 @@ namespace PlantBreeding.Garden
                     break;
 
                 case PlotState.Growing:
-                    // Поки немає екрану догляду (GDD 5.2) — вікно прискорення за кристали.
-                    GrowingPlotTapped?.Invoke(slot);
+                    // Чіп «Сонце» — швидкий догляд просто з грядки (як полив);
+                    // інакше картка рослини (EconomyOverlayView.PlantCard).
+                    if (slot.WantsSun) slot.GiveSun();
+                    else GrowingPlotTapped?.Invoke(slot);
                     break;
 
                 case PlotState.Locked:
-                    if (EconomyService.TryBuyPlot(slot.slotIndex)) slot.Unlock();
+                    if (Shop.ShopCatalog.ProductForPlot(slot.slotIndex) != null)
+                        SceneNavButton.OpenTab(SceneNavButton.ShopScene); // 7-ма/8-ма — за реальні гроші
+                    else if (EconomyService.TryBuyPlot(slot.slotIndex))
+                        slot.Unlock();
                     break;
             }
+        }
+
+        /// <summary>Екран догляду (полив і світло) — з картки рослини.</summary>
+        public void OpenCareScreen(PlotSlot slot)
+        {
+            if (slot == null || slot.plant == null) return;
+            CareRequest.Set(slot, this);
+            if (!SceneManager.GetSceneByName(CareSceneName).isLoaded)
+                SceneManager.LoadScene(CareSceneName, LoadSceneMode.Additive);
         }
 
         private void OpenPlantingScreen(PlotSlot slot)

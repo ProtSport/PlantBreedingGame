@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: violet
   displayName: "\u0424\u0456\u0430\u043B\u043A\u0430"
-  growTimeSeconds: 180
-  waterDepleteSeconds: 360
+  growTimeSeconds: 30
+  waterDepleteSeconds: 60
   sprite25: {fileID: 3286163911610860551, guid: 2970ee08e7ba4016b3d1092371bcf48f, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 09025a324a7c4d4c83e302e0fb7af2ba, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: b1173c7d83a54874bdcd506e32c6049d, type: 3}

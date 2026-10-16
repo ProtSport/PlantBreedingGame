@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: azalea
   displayName: "\u0410\u0437\u0430\u043B\u0456\u044F"
-  growTimeSeconds: 36000
-  waterDepleteSeconds: 9000
+  growTimeSeconds: 18000
+  waterDepleteSeconds: 4500
   sprite25: {fileID: 3286163911610860551, guid: 2700c4b29e7242578c65fc2f9122f1ec, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 3f9463c1b1c0473bb32f04ac61b920a3, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: b62b5ccd073c48e5aab64c36d25ab223, type: 3}

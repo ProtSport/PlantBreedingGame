@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: hibiscus
   displayName: "\u0413\u0456\u0431\u0456\u0441\u043A\u0443\u0441"
-  growTimeSeconds: 28800
-  waterDepleteSeconds: 7200
+  growTimeSeconds: 14400
+  waterDepleteSeconds: 3600
   sprite25: {fileID: 3286163911610860551, guid: 341451ec9eff4b2b8b3efa92c491b277, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 236ecf0581d94073ad272679885bca32, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 5fc8cd3ad950481db8fe458c5cb3cf7b, type: 3}

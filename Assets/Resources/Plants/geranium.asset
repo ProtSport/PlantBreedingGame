@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: geranium
   displayName: "\u041F\u0435\u043B\u0430\u0440\u0433\u043E\u043D\u0456\u044F"
-  growTimeSeconds: 18000
-  waterDepleteSeconds: 4500
+  growTimeSeconds: 7200
+  waterDepleteSeconds: 1800
   sprite25: {fileID: 3286163911610860551, guid: ecf6c4bd8893481ea77521788d5f55a6, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: ae284699b83d4ac38cd1bef0a7979bbf, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 138587a703084abbbe69c091cc8167a1, type: 3}

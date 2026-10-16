@@ -50,8 +50,9 @@ namespace PlantBreeding.EditorTools
             LabScreenBuilder.Build();
             DexScreenBuilder.Build();
             ShopScreenBuilder.Build();
+            CareScreenBuilder.Build();
             ProfileScreenBuilder.Build();
-            Debug.Log("[PlantBreeding] Усе зібрано: контент, сад, посадка, лабораторія, дендрарій, крамниця, профіль.");
+            Debug.Log("[PlantBreeding] Усе зібрано: контент, сад, посадка, лабораторія, дендрарій, крамниця, догляд, профіль.");
         }
 
         static void AddSceneToBuildSettingsAdditive()
@@ -93,6 +94,8 @@ namespace PlantBreeding.EditorTools
             controller.sprPill = LoadSprite("pill-16");
             controller.sprPillLine = LoadSprite("pill-16-line");
             controller.sprPotGlyph = LoadSprite("pot-glyph");
+            controller.sprCoin = LoadSprite("icon-coin", SvgDir);
+            controller.sprTag = LoadSprite("rounded-12");
 
             // Єдина шапка всіх екранів (HeaderView) + «назад»; монети/кристали
             // оновлює HeaderView, тож контролеру їх не передаємо.
@@ -256,20 +259,26 @@ namespace PlantBreeding.EditorTools
 
             var columns = new GameObject("ForecastColumns", typeof(RectTransform));
             columns.transform.SetParent(card.transform, false);
-            Place((RectTransform)columns.transform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(82, 0), new Vector2(260, 60));
+            // Від іконки горщика до правого краю картки — на вузьких екранах (21:9) колонки звужуються.
+            var colsRt = (RectTransform)columns.transform;
+            colsRt.anchorMin = new Vector2(0, 0.5f); colsRt.anchorMax = new Vector2(1, 0.5f);
+            colsRt.pivot = new Vector2(0, 0.5f);
+            colsRt.offsetMin = new Vector2(82, -30); colsRt.offsetMax = new Vector2(-12, 30);
             var chl = columns.AddComponent<HorizontalLayoutGroup>();
-            chl.spacing = 16; chl.childAlignment = TextAnchor.MiddleLeft;
+            chl.spacing = 9; chl.childAlignment = TextAnchor.MiddleLeft;
             // Обидва control=true + forceExpand=false — інакше LayoutElement-розміри
             // ігноруються: Divider ставав 100px завширшки (колонка «монет» з'їжджала
             // праворуч), а колонки — 0px заввишки (текст вилазив під картку).
             chl.childControlWidth = true; chl.childControlHeight = true;
             chl.childForceExpandWidth = false; chl.childForceExpandHeight = false;
 
-            var (growLbl, growNote) = BuildForecastColumn(columns.transform, "год", ColText, 100);
+            // Два стовпці по два рядки «Підпис: значення» (текст ставить PlantingScreenController):
+            // «Час росту: 3 хв» / «Горщик: базовий» · «Отримаю: 12 монет» / «Бонус: полив до +30%».
+            var (growLbl, growNote) = BuildForecastColumn(columns.transform, "Grow", ColText, 0.95f);
             var div = MakeImage("Divider", columns.transform, null, Rgba(Color.white, 0.12f), Image.Type.Simple);
             var divLe = div.gameObject.AddComponent<LayoutElement>();
             divLe.preferredWidth = 1; divLe.preferredHeight = 44;
-            var (sellLbl, sellNote) = BuildForecastColumn(columns.transform, "монет", ColGoldLt, 100);
+            var (sellLbl, sellNote) = BuildForecastColumn(columns.transform, "Sell", ColGoldLt, 1.05f);
 
             var plantBtn = MakeImage("PlantButton", bar.transform, LoadSprite("rounded-16"), ColGreenBr, Image.Type.Sliced);
             plantBtn.raycastTarget = true; // MakeImage вимикає raycastTarget за замовчуванням (декоративні елементи) —
@@ -297,32 +306,38 @@ namespace PlantBreeding.EditorTools
             controller.plantButtonLabel = plantBtnLbl;
         }
 
-        static (TMP_Text value, TMP_Text note) BuildForecastColumn(Transform parent, string unit, Color valueColor, float width)
+        /// <param name="flex">Частка ширини (flexibleWidth) — колонки ділять доступне місце.</param>
+        static (TMP_Text value, TMP_Text note) BuildForecastColumn(Transform parent, string name, Color valueColor, float flex)
         {
-            var col = new GameObject("Col_" + unit, typeof(RectTransform), typeof(LayoutElement));
+            var col = new GameObject("Col_" + name, typeof(RectTransform), typeof(LayoutElement));
             col.transform.SetParent(parent, false);
             var colLe = col.GetComponent<LayoutElement>();
-            colLe.preferredWidth = width;
-            colLe.preferredHeight = 60; // Value 26 + Unit 16 + Note 14 (див. офсети нижче)
+            colLe.minWidth = 0; colLe.preferredWidth = 0; colLe.flexibleWidth = flex;
+            colLe.preferredHeight = 44;
 
-            // Офсети рахуються від висоти елемента ВИЩЕ (26/16/14), інакше великий
-            // Value-текст (22pt) заходить на Unit під ним — саме це й "з'їжджало".
-            var value = MakeLabel("Value", col.transform, "0:00", FontHead, 22, valueColor, FontStyles.Bold);
-            Place(value.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 0), new Vector2(width, 26));
-            value.alignment = TextAlignmentOptions.TopLeft;
+            // Рядок 1 — головне (час / скільки отримаю), рядок 2 — від чого залежить.
+            var value = MakeLabel("Value", col.transform, "", FontUi, 13, valueColor, FontStyles.Bold);
+            Row(value.rectTransform, -2, 20);
+            value.alignment = TextAlignmentOptions.MidlineLeft;
             value.textWrappingMode = TextWrappingModes.NoWrap;
+            value.enableAutoSizing = true; value.fontSizeMin = 9; value.fontSizeMax = 13;
 
-            var unitLbl = MakeLabel("Unit", col.transform, unit, FontUi, 11, ColSoft, FontStyles.Normal);
-            Place(unitLbl.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -28), new Vector2(width, 16));
-            unitLbl.alignment = TextAlignmentOptions.TopLeft;
-            unitLbl.textWrappingMode = TextWrappingModes.NoWrap;
-
-            var note = MakeLabel("Note", col.transform, "базовий", FontUi, 9.5f, ColGreen, FontStyles.Normal);
-            Place(note.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, -46), new Vector2(width, 14));
-            note.alignment = TextAlignmentOptions.TopLeft;
+            var note = MakeLabel("Note", col.transform, "", FontUi, 11, ColText, FontStyles.Normal);
+            Row(note.rectTransform, -24, 18);
+            note.alignment = TextAlignmentOptions.MidlineLeft;
             note.textWrappingMode = TextWrappingModes.NoWrap;
+            note.enableAutoSizing = true; note.fontSizeMin = 8; note.fontSizeMax = 11;
 
             return (value, note);
+        }
+
+        /// <summary>Рядок на всю ширину колонки: top — відступ від верху, height — висота.</summary>
+        static void Row(RectTransform rt, float top, float height)
+        {
+            rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(0, 1);
+            rt.offsetMin = new Vector2(0, top - height);
+            rt.offsetMax = new Vector2(0, top);
         }
     }
 }

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: orchid
   displayName: "\u041E\u0440\u0445\u0456\u0434\u0435\u044F"
-  growTimeSeconds: 72000
-  waterDepleteSeconds: 18000
+  growTimeSeconds: 36000
+  waterDepleteSeconds: 9000
   sprite25: {fileID: 3286163911610860551, guid: 503a0ae208124778948aa32ec21c46a8, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: a7664260711e42728da027ad58935ccf, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 59fa02a900ac44aab94d99da5d641ff1, type: 3}

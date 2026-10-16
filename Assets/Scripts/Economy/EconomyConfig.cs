@@ -9,17 +9,16 @@ namespace PlantBreeding.Economy
     public static class EconomyConfig
     {
         // ── Старт нового гравця ──────────────────────────────────────────
-        // 2 фіалки і 0 монет: перша сесія = посадив 2 → зібрав за 3 хв →
-        // отримав монети → САМ купив нове насіння. Купити щось до першого
-        // врожаю неможливо навмисно — це і є перший урок петлі.
+        // 2 фіалки і 100 монет (2026-10-10, рішення власника гри): новачок одразу
+        // може докупити насіння чи взяти перший горщик, а не чекати першого врожаю.
         public const string StarterPlantId = "violet";
         public const int StarterSeedCount = 2;
-        public const int StarterCoins = 0;
+        public const int StarterCoins = 100;
 
         // Кристали: ЛИШЕ маленький стартовий подарунок (спробувати прискорення
         // 1–3 рази), далі — тільки покупка в Крамниці. Жодна ігрова дія
         // кристалів не нараховує (ні рівні, ні вхід, ні завдання, ні лабораторія).
-        public const int StarterGems = 3;
+        public const int StarterGems = 5;
 
         /// <summary>Одноразовий бонус за найперший урожай у грі (разом із продажем 2 фіалок = 54 монети).</summary>
         public const int FirstHarvestBonusCoins = 30;
@@ -31,6 +30,15 @@ namespace PlantBreeding.Economy
         public const int MaxCareWaterings = 3;
         public const float CareBonusPerWatering = 0.10f;
         public const int WaterXp = 2;
+
+        // ── Догляд (світло) ──────────────────────────────────────────────
+        // Як полив: рослина двічі за ріст «хоче на сонце» (рівномірно по часу
+        // росту), тап — +5% до ціни. Разом з поливом догляд дає до +40%.
+        public const int MaxSunnings = 2;
+        public const float SunBonus = 0.05f;
+        public const int SunXp = 2;
+        /// <summary>Найкоротший інтервал між бажаннями сонця — для рослин на кілька хвилин.</summary>
+        public const float MinSunIntervalSeconds = 45f;
 
         // ── Грядки ───────────────────────────────────────────────────────
         // Індекс слота → рівень, на якому відкривається безкоштовно, і ціна,

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Бібліотеки входу через Google для прив'язки прогресу до акаунта.
+  Android: Credential Manager + Sign in with Google (Plugins/Android/GoogleSignInBridge.java) —
+  External Dependency Manager дописує їх у mainTemplate.gradle під час збірки.
+  iOS: Google Sign-In SDK (Plugins/iOS/CloudSignInBridge.mm) — EDM додає pod у Podfile.
+  Sign in with Apple — системний фреймворк AuthenticationServices, pod не потрібен.
+-->
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="androidx.credentials:credentials:1.3.0" />
+    <androidPackage spec="androidx.credentials:credentials-play-services-auth:1.3.0" />
+    <androidPackage spec="com.google.android.libraries.identity.googleid:googleid:1.1.1" />
+  </androidPackages>
+  <iosPods>
+    <iosPod name="GoogleSignIn" version="&gt;= 8.0" minTargetSdk="15.0" />
+  </iosPods>
+</dependencies>

@@ -187,6 +187,8 @@ namespace PlantBreeding.Collections
         public string name;  // для розгорнутого слота (детальний екран)
         public string tier;  // пігулка в кутку, напр. "рідкісна"
         public string sub;   // підпис знизу, напр. "зібрано 3×"
+        /// <summary>Рослина слота — відкритий вид показується своїм дорослим зображенням.</summary>
+        public Garden.PlantData plant;
 
         public SlotDef(string rarity, bool done, string name = null, string tier = null, string sub = null)
         {

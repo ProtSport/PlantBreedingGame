@@ -79,7 +79,7 @@ namespace PlantBreeding.UI
 
                 // Таймер у чіпі — раз на секунду, не щокадру.
                 _chipTimer -= Time.deltaTime;
-                if (_chipTimer <= 0f && _slot.state == PlotState.Growing && chipText != null)
+                if (_chipTimer <= 0f && _slot.state == PlotState.Growing && !_slot.WantsSun && chipText != null)
                 {
                     _chipTimer = 1f;
                     chipText.text = FormatRemaining(_slot.GetRemainingSeconds());
@@ -95,7 +95,7 @@ namespace PlantBreeding.UI
             _manager.OnPlotTapped(_slot);
         }
 
-        private void Redraw()
+        public void Redraw()
         {
             bool isContent = _slot.state == PlotState.Growing || _slot.state == PlotState.NeedsWater
                               || _slot.state == PlotState.Sick || _slot.state == PlotState.Ready;
@@ -224,6 +224,12 @@ namespace PlantBreeding.UI
                     text = new Color(0.776f, 0.816f, 0.910f);
                     label = "Полити";
                     break;
+                case PlotState.Growing when _slot.WantsSun:
+                    bg = new Color(0.894f, 0.780f, 0.494f, 0.18f);
+                    border_ = new Color(0.894f, 0.780f, 0.494f, 0.45f);
+                    text = new Color(0.957f, 0.871f, 0.616f);
+                    label = "Сонце";
+                    break;
                 default: // Growing
                     bg = new Color(1, 1, 1, 0.06f);
                     border_ = new Color(1, 1, 1, 0.12f);
@@ -238,8 +244,8 @@ namespace PlantBreeding.UI
             if (chipDot != null)
             {
                 chipDot.gameObject.SetActive(!showWarning);
-                chipDot.color = _slot.state == PlotState.Ready
-                    ? new Color(0.710f, 0.902f, 0.478f)
+                chipDot.color = _slot.state == PlotState.Ready ? new Color(0.710f, 0.902f, 0.478f)
+                    : _slot.state == PlotState.Growing && _slot.WantsSun ? new Color(0.957f, 0.808f, 0.420f)
                     : new Color(0.624f, 0.698f, 0.902f);
             }
             if (chipWarningIcon != null) chipWarningIcon.gameObject.SetActive(showWarning);

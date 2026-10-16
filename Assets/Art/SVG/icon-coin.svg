@@ -1,1 +1,14 @@
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64"><circle cx="12" cy="12" r="9" fill="#E4C77E"></circle><circle cx="12" cy="12" r="9" fill="none" stroke="#C9A65A" stroke-width="1.6"></circle><circle cx="12" cy="12" r="5" fill="none" stroke="#B8934A" stroke-width="1.6"></circle></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="64" height="64">
+  <defs>
+    <linearGradient id="gFace" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE7A8"></stop><stop offset=".5" stop-color="#E4C26E"></stop><stop offset="1" stop-color="#B68A3A"></stop></linearGradient>
+    <linearGradient id="gEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C99C48"></stop><stop offset="1" stop-color="#7E5A20"></stop></linearGradient>
+  </defs>
+  <circle cx="24" cy="25.5" r="21" fill="url(#gEdge)"></circle>
+  <circle cx="24" cy="23.5" r="21" fill="url(#gFace)" stroke="#8A6424" stroke-width="1.2"></circle>
+  <circle cx="24" cy="23.5" r="16.5" fill="none" stroke="#A97E34" stroke-width="1" stroke-dasharray="1.4 2"></circle>
+  <path d="M15 32 Q24 29 33 32" stroke="#8A6424" stroke-width="1.6" stroke-linecap="round" fill="none"></path>
+  <path d="M24 31 V20" stroke="#8A6424" stroke-width="2" stroke-linecap="round"></path>
+  <path d="M24 23 C18 23 15 19 15 14 C21 14 24 17 24 23Z" fill="#B88A3C" stroke="#8A6424" stroke-width="1"></path>
+  <path d="M24 21 C29 21 33 18 33 12 C27 12 24 15 24 21Z" fill="#C99A48" stroke="#8A6424" stroke-width="1"></path>
+  <path d="M12 15 Q15 9 22 7.5" stroke="#FFF6D6" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".8"></path>
+</svg>

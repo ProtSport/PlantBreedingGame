@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: spider_plant
   displayName: "\u0425\u043B\u043E\u0440\u043E\u0444\u0456\u0442\u0443\u043C"
-  growTimeSeconds: 1800
-  waterDepleteSeconds: 450
+  growTimeSeconds: 300
+  waterDepleteSeconds: 600
   sprite25: {fileID: 3286163911610860551, guid: 685bfc4b9f984bfe80c85f31d5c4300c, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: fe93c4edb95a40259813f1088c19f866, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 1f6ba257e9fb487d91cc31fd39952106, type: 3}

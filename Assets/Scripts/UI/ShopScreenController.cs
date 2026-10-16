@@ -315,6 +315,7 @@ namespace PlantBreeding.UI
                 Flex(col);
                 var title = Label(col.transform, pro.title, fontHead, 21, ColText, FontStyles.Normal, TextAlignmentOptions.MidlineLeft);
                 LE(title.gameObject, -1, 26);
+                OneLine(title, 14);
                 var desc = Label(col.transform, pro.desc, fontUi, 12, ColMut, FontStyles.Bold, TextAlignmentOptions.TopLeft);
                 desc.textWrappingMode = TextWrappingModes.Normal;
                 PriceButton(card.transform, pro, ColGreen, Hex("#0E130C"), 36, 88, 14);
@@ -382,6 +383,7 @@ namespace PlantBreeding.UI
                 Flex(col);
                 var title = Label(col.transform, p.title, fontHead, 21, ColText, FontStyles.Normal, TextAlignmentOptions.MidlineLeft);
                 LE(title.gameObject, -1, 24);
+                OneLine(title, 14);
                 var chips = Row(col.transform, 20, 5, TextAnchor.MiddleLeft);
                 foreach (var effect in p.desc.Split(new[] { " · " }, System.StringSplitOptions.RemoveEmptyEntries))
                     Pill(chips.transform, effect.Replace("часу росту", "часу"), Rgba(ColGreen, 0.14f), ColChipOk, 11, 20);
@@ -412,6 +414,7 @@ namespace PlantBreeding.UI
             Flex(col);
             var title = Label(col.transform, p.title, fontHead, 21, ColText, FontStyles.Normal, TextAlignmentOptions.MidlineLeft);
             LE(title.gameObject, -1, 24);
+            OneLine(title, 14);
             var desc = Label(col.transform, p.desc, fontUi, 12, ColMut, FontStyles.Bold, TextAlignmentOptions.TopLeft);
             desc.textWrappingMode = TextWrappingModes.Normal;
             var plant = ShopService.SeedPlant(data);
@@ -439,6 +442,7 @@ namespace PlantBreeding.UI
             Flex(col);
             var title = Label(col.transform, p.title, fontHead, 21, ColText, FontStyles.Normal, TextAlignmentOptions.MidlineLeft);
             LE(title.gameObject, -1, 24);
+            OneLine(title, 14);
             var desc = Label(col.transform, $"{SeedCapsule.PlantsPerCapsule} насінини трьох різних рослин — сюрприз",
                 fontUi, 12, ColMut, FontStyles.Bold, TextAlignmentOptions.TopLeft);
             desc.textWrappingMode = TextWrappingModes.Normal;
@@ -980,6 +984,15 @@ namespace PlantBreeding.UI
             tmp.fontSize = size; tmp.color = color; tmp.fontStyle = style; tmp.alignment = align;
             tmp.raycastTarget = false;
             return tmp;
+        }
+
+        /// <summary>Назва картки в один рядок: на вузьких екранах (21:9) зменшується, а не переноситься на опис.</summary>
+        private static void OneLine(TMP_Text t, float minSize)
+        {
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.enableAutoSizing = true;
+            t.fontSizeMin = minSize;
+            t.fontSizeMax = t.fontSize;
         }
 
         private static void LE(GameObject go, float w, float h)

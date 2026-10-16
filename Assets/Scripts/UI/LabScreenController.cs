@@ -476,6 +476,9 @@ namespace PlantBreeding.UI
                 case LabStartResult.NotEnoughCoins:
                     ShowToast("Недостатньо монет");
                     break;
+                case LabStartResult.KeepPlantMoney:
+                    ShowToast($"Залиш {GameManager.Instance.CheapestPlantCost} монет на рослину — дослідиш трохи згодом");
+                    break;
                 case LabStartResult.NotEnoughGems:
                     ShowToast("Недостатньо кристалів");
                     break;

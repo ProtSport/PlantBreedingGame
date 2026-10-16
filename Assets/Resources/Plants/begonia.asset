@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: begonia
   displayName: "\u0411\u0435\u0433\u043E\u043D\u0456\u044F"
-  growTimeSeconds: 10800
-  waterDepleteSeconds: 2700
+  growTimeSeconds: 3600
+  waterDepleteSeconds: 900
   sprite25: {fileID: 3286163911610860551, guid: c0885c3abc224beda3f19c4bcbd0f7e5, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 9b9b2e79d3bc43d28cc2d33e7ca83815, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 7df28966c579488d91a4c5d037bd4cfd, type: 3}

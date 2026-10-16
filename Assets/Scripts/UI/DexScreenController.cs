@@ -396,6 +396,9 @@ namespace PlantBreeding.UI
         // ════════════════════════════════════════════════════════════════
         //  ДЕТАЛЬ-ОВЕРЛЕЙ (розкрита колекція) — перебудовується при відкритті
         // ════════════════════════════════════════════════════════════════
+        /// <summary>Розгорнута колекція за id (Editor/ScreenAudit знімає її для перевірки).</summary>
+        internal void OpenCollection(string id) => OpenDetail(CollectionDetail(Data, CollectionCatalog.Get(id)));
+
         private void OpenDetail(DetailDef d)
         {
             if (detailPanel == null || d == null) return;
@@ -429,6 +432,9 @@ namespace PlantBreeding.UI
             var gl = grid.GetComponent<GridLayoutGroup>();
             gl.cellSize = new Vector2(166, 150); gl.spacing = new Vector2(13, 13);
             gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = 2;
+            // Дві колонки на всю ширину блоку (ширина екрана різна — рахує GridCellFitter).
+            var fit = grid.AddComponent<GridCellFitter>();
+            fit.columns = 2; fit.rows = 0; fit.fixedCellHeight = 150;
             foreach (var slot in d.slots) BuildDetailSlot(grid.transform, slot);
 
             // Підказка
@@ -472,10 +478,14 @@ namespace PlantBreeding.UI
             var border = MakeImage(cell.transform, "Border", sprRoundedCardLine, r.border, Image.Type.Sliced);
             Stretch(border.rectTransform);
 
-            var sprig = MakeImage(cell.transform, "Sprig", sprSprig, done ? r.fill : ColDim, Image.Type.Simple);
+            // Відкритий вид — його доросле зображення (стадія 100%), інакше значок-паросток.
+            var art = done ? AdultSprite(slot.plant) : null;
+            var sprig = MakeImage(cell.transform, "Sprig", art != null ? art : sprSprig,
+                art != null ? slot.plant.tint : done ? r.fill : ColDim, Image.Type.Simple);
             sprig.preserveAspect = true;
             if (!done) sprig.color = Rgba(ColDim, 0.35f);
-            Place(sprig.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -14), new Vector2(62, 62));
+            if (art != null) Place(sprig.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -6), new Vector2(110, 90));
+            else Place(sprig.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -14), new Vector2(62, 62));
 
             if (!done)
             {
@@ -502,6 +512,10 @@ namespace PlantBreeding.UI
             Place(sub.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 12), new Vector2(150, 16));
             sub.alignment = TextAlignmentOptions.Center;
         }
+
+        /// <summary>Доросла рослина (стадія 100%) або null, якщо арту немає / слот не про рослину.</summary>
+        private static Sprite AdultSprite(PlantData plant) =>
+            plant == null ? null : plant.sprite100 != null ? plant.sprite100 : plant.GetGrowthSprite(1f);
 
         private void CloseDetail()
         {
@@ -644,7 +658,7 @@ namespace PlantBreeding.UI
                 bool done = data.weekHarvestedIds.Contains(id);
                 return new SlotDef(done && p != null ? RarityKey(p.rarity) : "lock", done,
                     p != null ? p.displayName : id, p != null ? RarityLabel(p.rarity) : null,
-                    done ? "зібрано цього тижня" : "ще не зібрано");
+                    done ? "зібрано цього тижня" : "ще не зібрано") { plant = p };
             }).ToList();
 
             return new DetailDef
@@ -675,7 +689,7 @@ namespace PlantBreeding.UI
                 foreach (var k in keys)
                 {
                     var slot = MakeSlot(data, def, k);
-                    list.Add(new SlotDef(slot.rarity, slot.done));
+                    list.Add(new SlotDef(slot.rarity, slot.done) { plant = slot.plant });
                 }
                 return list;
             }
@@ -706,7 +720,7 @@ namespace PlantBreeding.UI
                         CollectionGoal.PerfectCare => done ? "без пропусків" : "ще не вдалось",
                         _ => done ? $"зібрано {count}×" : $"з рівня {p.unlockLevel}",
                     };
-                    return new SlotDef(done ? RarityKey(p.rarity) : "lock", done, p.displayName, RarityLabel(p.rarity), sub);
+                    return new SlotDef(done ? RarityKey(p.rarity) : "lock", done, p.displayName, RarityLabel(p.rarity), sub) { plant = p };
                 }
                 case CollectionGoal.CureAilment:
                 {
@@ -780,9 +794,14 @@ namespace PlantBreeding.UI
 
             if (done)
             {
-                var sprig = MakeImage(cell.transform, "Sprig", sprSprig, r.fill, Image.Type.Simple);
+                var art = AdultSprite(slot.plant);
+                var sprig = MakeImage(cell.transform, "Sprig", art != null ? art : sprSprig,
+                    art != null ? slot.plant.tint : r.fill, Image.Type.Simple);
                 sprig.preserveAspect = true;
-                Place(sprig.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(34, 34));
+                // Доросла рослина займає нижні ~2/3 полотна 200×260 (горщик унизу): зсув угору
+                // на 15% висоти ставить її по центру клітинки.
+                if (art != null) Place(sprig.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 9), new Vector2(54, 60));
+                else Place(sprig.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(34, 34));
 
                 if (showCheck)
                 {

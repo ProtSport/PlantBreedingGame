@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: calathea
   displayName: "\u041A\u0430\u043B\u0430\u0442\u0435\u044F"
-  growTimeSeconds: 14400
-  waterDepleteSeconds: 3600
+  growTimeSeconds: 5400
+  waterDepleteSeconds: 1350
   sprite25: {fileID: 3286163911610860551, guid: fe09fb02a0a44217b1e3ba1e2cbaa69d, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 87767d416db24fa58fbea5d993636e5e, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: c89abf1ac8244c55b828a5c6911473f5, type: 3}

@@ -125,13 +125,22 @@ namespace PlantBreeding.Economy
         /// silent = без тосту про продаж (для «Зібрати все», де показується один
         /// підсумковий тост). Повертає нараховані за продаж монети.
         /// </summary>
-        public static int GrantHarvest(PlantData plant, PotData pot, int wateredCount, bool perfectCare = false, bool silent = false)
+        /// <summary>
+        /// Множник ціни за догляд: кожен вчасний полив +10% (до 3) і кожне «сонце»
+        /// +5% (до 2). Те саме показує картка рослини як «ціну зараз».
+        /// </summary>
+        public static float CareMultiplier(int wateredCount, int sunCount) =>
+            1f + Mathf.Min(wateredCount, EconomyConfig.MaxCareWaterings) * CollectionService.CareBonusPerWatering
+               + Mathf.Min(sunCount, EconomyConfig.MaxSunnings) * EconomyConfig.SunBonus;
+
+        public static int GrantHarvest(PlantData plant, PotData pot, int wateredCount, int sunCount = 0,
+            bool perfectCare = false, bool silent = false)
         {
             var gm = Gm;
             if (gm == null || plant == null) return 0;
             var data = gm.playerData;
 
-            float care = 1f + Mathf.Min(wateredCount, EconomyConfig.MaxCareWaterings) * CollectionService.CareBonusPerWatering;
+            float care = CareMultiplier(wateredCount, sunCount);
             int price = Mathf.RoundToInt(PlantingForecast.SellPriceWithBonuses(plant, pot) * care);
             bool doubled = UnityEngine.Random.value < LabResearchService.GetYieldDoubleHarvestChance(data);
             if (doubled) price *= 2;
@@ -144,10 +153,9 @@ namespace PlantBreeding.Economy
 
             if (!silent)
             {
-                var msg = $"{plant.displayName}: +{price} монет";
-                if (doubled) msg += " (подвійний урожай!)";
-                else if (wateredCount > 0) msg += $" (догляд +{Mathf.RoundToInt((care - 1f) * 100f)}%)";
-                GameEvents.RaiseToast(msg);
+                // Рядок продажу під шапкою (EconomyOverlayView.Notifications): «Фіалка продана  +12 🪙».
+                string title = doubled ? $"{plant.displayName} · подвійний урожай" : $"{plant.displayName} продана";
+                GameEvents.RaiseSale(plant.plantId, title, price);
             }
 
             if (!data.firstHarvestDone)
@@ -159,6 +167,7 @@ namespace PlantBreeding.Economy
 
             Track(DailyTaskKind.Harvest, 1);
             Track(DailyTaskKind.EarnCoins, price);
+            Cloud.Telemetry.Harvest(plant.plantId, price, data.totalHarvests);
 
             // XP в кінці — level up міг би показати тост раніше за сам урожай.
             float xpBonus = (pot != null ? pot.xpBonus : 0f) + CollectionService.XpBonus(plant.plantId)
@@ -213,6 +222,16 @@ namespace PlantBreeding.Economy
 
         public static string LockedPlotLabel(int slotIndex)
         {
+            // 7-ма/8-ма — лише в Крамниці (тап по грядці відкриває її, GardenManager).
+            var shopPlot = Shop.ShopCatalog.ProductForPlot(slotIndex);
+            if (shopPlot != null)
+            {
+                var data = Gm != null ? Gm.playerData : null;
+                bool waiting = data != null && !string.IsNullOrEmpty(shopPlot.requiresId)
+                               && !Shop.ShopService.IsPurchased(data, shopPlot.requiresId);
+                return waiting ? "Крамниця\nпісля 7-ї грядки" : $"Крамниця\n{Shop.StoreGateway.PriceLabel(shopPlot)}";
+            }
+
             var rule = EconomyConfig.GetPlotRule(slotIndex);
             return rule.coinCost > 0 ? $"Рівень {rule.level}\nабо {rule.coinCost} монет" : $"Рівень {rule.level}";
         }
@@ -231,9 +250,11 @@ namespace PlantBreeding.Economy
                 GameEvents.RaiseToast($"Грядка відкриється на рівні {rule.level}");
                 return false;
             }
-            if (!gm.TrySpendCoins(rule.coinCost))
+            if (!gm.TrySpendCoinsKeepingPlantMoney(rule.coinCost))
             {
-                GameEvents.RaiseToast($"Потрібно {rule.coinCost} монет (або рівень {rule.level})");
+                GameEvents.RaiseToast(gm.playerData.coins >= rule.coinCost
+                    ? $"Залиш {gm.CheapestPlantCost} монет на рослину — грядку купиш трохи згодом"
+                    : $"Потрібно {rule.coinCost} монет (або рівень {rule.level})");
                 return false;
             }
 
@@ -270,6 +291,7 @@ namespace PlantBreeding.Economy
             double before = slot.GetRemainingSeconds();
             slot.SpeedUp(EconomyConfig.SpeedUpFraction);
             SaveSystem.Save(gm.playerData);
+            Cloud.Telemetry.SpeedUp(cost);
             GameEvents.RaiseToast($"{name}: {TimeFormat.Remaining(before)} → {TimeFormat.Remaining(slot.GetRemainingSeconds())} (−{cost} крист.)");
             return SpeedUpResult.Ok;
         }
@@ -366,8 +388,10 @@ namespace PlantBreeding.Economy
             var gm = Gm;
             if (gm == null || amount <= 0) return;
             bool changed = false;
-            foreach (var task in gm.playerData.dailyTasks)
+            var tasks = gm.playerData.dailyTasks;
+            for (int i = 0; i < tasks.Count; i++)
             {
+                var task = tasks[i];
                 // Посадка конкретного виду рахується і в загальне "Посадити N".
                 bool matches = task.kind == kind
                     || (kind == DailyTaskKind.Plant && task.kind == DailyTaskKind.PlantSpecies && task.plantId == plantId);
@@ -375,7 +399,7 @@ namespace PlantBreeding.Economy
 
                 task.progress = Mathf.Min(task.target, task.progress + amount);
                 changed = true;
-                if (task.IsComplete) GameEvents.RaiseToast($"Завдання виконано: {DescribeTask(task)} — забери нагороду");
+                if (task.IsComplete) GameEvents.RaiseTaskCompleted(i); // картка «Завдання виконано · Забрати»
             }
             if (changed) GameEvents.RaiseDailyStateChanged();
         }

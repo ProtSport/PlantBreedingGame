@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlantBreeding.Garden.PlantData
   plantId: gardenia
   displayName: "\u0413\u0430\u0440\u0434\u0435\u043D\u0456\u044F"
-  growTimeSeconds: 50400
-  waterDepleteSeconds: 12600
+  growTimeSeconds: 25200
+  waterDepleteSeconds: 6300
   sprite25: {fileID: 3286163911610860551, guid: f52dc56b17bc4a9bac6f05b5cdee745b, type: 3}
   sprite50: {fileID: 3286163911610860551, guid: 3d781c884dec4984bc09ed2c54d44ff3, type: 3}
   sprite75: {fileID: 3286163911610860551, guid: 6337e66178be4d35a2b2d0874755f501, type: 3}

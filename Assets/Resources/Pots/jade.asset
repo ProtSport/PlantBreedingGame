@@ -20,7 +20,8 @@ MonoBehaviour:
   waterIntervalBonus: 0
   ailmentResistance: 0
   xpBonus: 0.08
-  effectLabel: "\u221215% \u0447\u0430\u0441\u0443 \u0440\u043e\u0441\u0442\u0443\n+8% \u0446\u0456\u043d\u0430 \u00b7 +8% XP"
+  effectLabel: "\u221215% \u0447\u0430\u0441\u0443 \u0440\u043E\u0441\u0442\u0443\n+8%
+    \u0446\u0456\u043D\u0430 \xB7 +8% XP"
   colorTop: {r: 0.5568628, g: 0.84705883, b: 0.68235296, a: 1}
   colorMid: {r: 0.24313726, g: 0.6117647, b: 0.43137255, a: 1}
   colorBottom: {r: 0.12156863, g: 0.41568628, b: 0.28235295, a: 1}
