@@ -127,12 +127,20 @@ namespace PlantBreeding.UI
             hrt.sizeDelta = new Vector2(168, 168);
             hrt.anchoredPosition = Vector2.zero;
 
-            var ring = MakeImage(hero.transform, "Ring", sprCircleLine, ColGold, Image.Type.Simple);
+            // Аватар під рамкою: малюнок аватара — повне коло, рамка — кільце з прозорим центром.
+            var faceBg = MakeImage(hero.transform, "Face", sprCircleFill, Hex("#1C2414"), Image.Type.Simple);
+            float face = 168 * ProfileArt.AvatarInFrame;
+            Place(faceBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(face, face));
+
+            var icon = MakeImage(hero.transform, "Avatar", null, Color.white, Image.Type.Simple);
+            icon.preserveAspect = true;
+            _heroIcon = icon;
+            Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(face, face));
+
+            var ring = MakeImage(hero.transform, "Frame", null, Color.white, Image.Type.Simple);
+            ring.preserveAspect = true;
             Stretch(ring.rectTransform);
             _heroRing = ring;
-
-            var faceBg = MakeImage(hero.transform, "Face", sprCircleFill, Hex("#1C2414"), Image.Type.Simple);
-            Place(faceBg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(156, 156));
 
             var sparkles = new GameObject("Sparkles", typeof(RectTransform));
             sparkles.transform.SetParent(hero.transform, false);
@@ -141,11 +149,6 @@ namespace PlantBreeding.UI
             AddSparkle(sparkles.transform, new Vector2(58, 62), 16);
             AddSparkle(sparkles.transform, new Vector2(-64, -50), 12);
             AddSparkle(sparkles.transform, new Vector2(-78, 30), 9);
-
-            var icon = MakeImage(hero.transform, "Sprig", sprSprig, Hex("#DDE8C8"), Image.Type.Simple);
-            icon.preserveAspect = true;
-            _heroIcon = icon;
-            Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -6), new Vector2(72, 72));
         }
 
         private void AddSparkle(Transform parent, Vector2 pos, float size)
@@ -242,9 +245,9 @@ namespace PlantBreeding.UI
                 bg.sprite = sprRoundedCard; bg.type = Image.Type.Sliced;
                 var border = MakeImage(cell.transform, "Border", sprRoundedCardLine, Rgba(Color.white, 0.1f), Image.Type.Sliced);
                 Stretch(border.rectTransform);
-                var icon = MakeImage(cell.transform, "Sprig", sprSprig, Hex(def.tintHex), Image.Type.Simple);
+                var icon = MakeImage(cell.transform, "Avatar", ProfileArt.Avatar(def.id), Color.white, Image.Type.Simple);
                 icon.preserveAspect = true;
-                Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(36, 36));
+                Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(64, 64));
                 var check = MakeCheckBadge(cell.transform);
                 var lockBadge = MakeLockBadge(cell.transform);
 
@@ -280,10 +283,13 @@ namespace PlantBreeding.UI
                 ringWrap.transform.SetParent(col.transform, false);
                 ringWrap.GetComponent<LayoutElement>().preferredHeight = 80;
                 var ring = ringWrap.GetComponent<Image>();
-                ring.sprite = sprCircleLine; ring.color = Hex(def.colorHex);
+                ring.sprite = ProfileArt.Frame(def.id); ring.color = Color.white; ring.preserveAspect = true;
                 ring.raycastTarget = true;
+                // Темне коло в отворі рамки (рамка поверх нього виглядає «надягнутою»).
                 var face = MakeImage(ringWrap.transform, "Face", sprCircleFill, Hex("#1C2414"), Image.Type.Simple);
-                Place(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(68, 68));
+                face.transform.SetAsFirstSibling();
+                float hole = 80 * ProfileArt.AvatarInFrame - 6;
+                Place(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(hole, hole));
                 var check = MakeCheckBadge(ringWrap.transform);
                 var lockBadge = MakeLockBadge(ringWrap.transform);
 
@@ -412,9 +418,8 @@ namespace PlantBreeding.UI
             if (data == null) return;
 
             string tier = gm.GetPrestigeTier();
-            _heroRing.color = TierColor(tier);
-            var activeAvatar = ProfileItemCatalog.FindAvatar(data.activeAvatarId);
-            if (_heroIcon != null) _heroIcon.color = Hex(activeAvatar != null ? activeAvatar.tintHex : "#DDE8C8");
+            _heroRing.sprite = ProfileArt.Frame(data.activeFrameId);
+            if (_heroIcon != null) _heroIcon.sprite = ProfileArt.Avatar(data.activeAvatarId);
             if (_heroSparkles != null) _heroSparkles.gameObject.SetActive(tier == "spark");
 
             _nameLabel.text = data.playerName;
@@ -448,7 +453,7 @@ namespace PlantBreeding.UI
                 bool owned = gm.IsFrameOwned(cell.def.id);
                 bool active = data.activeFrameId == cell.def.id;
                 if (owned) frOwned++;
-                cell.ring.color = owned ? Hex(cell.def.colorHex) : Rgba(Color.white, 0.14f);
+                cell.ring.color = owned ? Color.white : Rgba(Color.white, 0.22f); // закрита — бліда
                 cell.checkBadge.SetActive(active);
                 cell.lockBadge.SetActive(!owned);
                 cell.label.color = active ? Hex(cell.def.colorHex) : ColMut;
@@ -457,13 +462,6 @@ namespace PlantBreeding.UI
             RefreshCloud();
         }
 
-        private static Color TierColor(string tier) => tier switch
-        {
-            "spark" => UIColors.Hex("#E4C77E"),
-            "gold" => UIColors.Hex("#E4C77E"),
-            "green" => UIColors.Green,
-            _ => UIColors.Hex("#5C6653"),
-        };
 
         // ════════════════════════════════════════════════════════════════
         //  ДІЇ

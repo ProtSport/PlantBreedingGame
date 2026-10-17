@@ -16,8 +16,8 @@ namespace PlantBreeding.Core
         public static event Action OnDexBadgeChanged;        // нова рослина в колекції / Дендрарій переглянуто
         /// <summary>Продаж урожаю: id рослини (null — кілька, «Зібрати все»), підпис, монети.</summary>
         public static event Action<string, string, int> OnSale;
-        /// <summary>Щоденне завдання виконано — індекс у PlayerData.dailyTasks (картка «Забрати»).</summary>
-        public static event Action<int> OnTaskCompleted;
+        /// <summary>Завдання виконано — індекс у PlayerData.dailyTasks або weeklyTasks (weekly = true); картка «Забрати».</summary>
+        public static event Action<int, bool> OnTaskCompleted;
 
         public static void RaiseCurrencyChanged() => OnCurrencyChanged?.Invoke();
         public static void RaiseLevelUp(int newLevel) => OnLevelUp?.Invoke(newLevel);
@@ -26,6 +26,6 @@ namespace PlantBreeding.Core
         public static void RaiseDailyStateChanged() => OnDailyStateChanged?.Invoke();
         public static void RaiseDexBadgeChanged() => OnDexBadgeChanged?.Invoke();
         public static void RaiseSale(string plantId, string title, int coins) => OnSale?.Invoke(plantId, title, coins);
-        public static void RaiseTaskCompleted(int index) => OnTaskCompleted?.Invoke(index);
+        public static void RaiseTaskCompleted(int index, bool weekly = false) => OnTaskCompleted?.Invoke(index, weekly);
     }
 }

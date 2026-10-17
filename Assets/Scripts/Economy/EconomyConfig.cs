@@ -96,6 +96,13 @@ namespace PlantBreeding.Economy
         public static int DailyChestCoins(int level) => 40 + 10 * level;
         public const int DailyChestXp = 20;
 
+        // «Завдання тижня»: нагорода за кожне — ×3 від щоденного; скриня — аватар або рамка
+        // (WeeklyTasks.WeeklyRewardOrder), а коли всі зібрано — монети.
+        public const int WeeklyTaskCount = 5;
+        public const int WeeklyRewardMultiplier = 3;
+        public const int WeeklyLoginDays = 4;
+        public static int WeeklyChestCoins(int level) => 300 + 40 * level;
+
         public static int TaskRewardCoins(int level) => 20 + 6 * level;
         public static int TaskRewardXp(int level) => 15 + 3 * level;
     }

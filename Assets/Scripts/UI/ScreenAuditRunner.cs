@@ -109,6 +109,8 @@ namespace PlantBreeding.UI
                 {
                     overlay.OpenTasks();
                     yield return Shot("03_daily_tasks");
+                    overlay.ShowWeekTab();
+                    yield return Shot("03b_weekly_tasks");
                     overlay.CloseModal();
                     overlay.OpenSettings();
                     yield return Shot("04_settings");
@@ -137,7 +139,17 @@ namespace PlantBreeding.UI
                     return "08b_dex_detail";
                 });
                 yield return SceneShot("Shop", "09_shop");
-                yield return SceneShot("Profile", "10_profile");
+                // Усі аватари й рамки «відкриті» (лише в пам'яті — SaveSystem.Suspended), щоб видно було всі малюнки.
+                var pd = gm.playerData;
+                foreach (var av in Collections.ProfileItemCatalog.Avatars) if (!pd.ownedAvatarIds.Contains(av.id)) pd.ownedAvatarIds.Add(av.id);
+                foreach (var fr in Collections.ProfileItemCatalog.Frames) if (!pd.ownedFrameIds.Contains(fr.id)) pd.ownedFrameIds.Add(fr.id);
+                pd.activeAvatarId = "bee"; pd.activeFrameId = "floral";
+                yield return SceneShot("Profile", "10_profile", () =>
+                {
+                    var scroll = FindAnyObjectByType<ProfileScreenController>()?.GetComponentInChildren<ScrollRect>();
+                    if (scroll != null) scroll.verticalNormalizedPosition = 0f; // донизу — сітка рамок
+                    return "10b_profile_frames";
+                });
             }
 
             Finish(0, "готово");

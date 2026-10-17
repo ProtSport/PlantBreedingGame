@@ -225,6 +225,7 @@ namespace PlantBreeding.Garden
             _wantsSunShown = false;
             StateChanged?.Invoke(this);
             GameManager.Instance?.AddXp(EconomyConfig.SunXp);
+            EconomyService.Track(DailyTaskKind.Sun, 1); // «Доглянути N разів» у Завданнях тижня
             Cloud.Telemetry.Care("sun");
             GameEvents.RaiseToast($"Сонечко! +{Mathf.RoundToInt(EconomyConfig.SunBonus * 100f)}% до ціни врожаю");
         }

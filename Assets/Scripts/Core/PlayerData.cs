@@ -69,6 +69,13 @@ namespace PlantBreeding.Core
         public List<DailyTaskSave> dailyTasks = new List<DailyTaskSave>();
         public bool dailyChestClaimed = false;
 
+        // «Завдання тижня» (Economy/WeeklyTasks): ISO-тиждень, 5 завдань, скриня з аватаром/рамкою.
+        public string weeklyKey = "";
+        public List<DailyTaskSave> weeklyTasks = new List<DailyTaskSave>();
+        public bool weeklyChestClaimed = false;
+        public List<string> weeklyPlantedSpecies = new List<string>(); // «Посадити N різних видів»
+        public List<string> weeklyLoginDays = new List<string>();      // «Заходити в гру N днів»
+
         // Грядки, відкриті за монети раніше за потрібний рівень.
         public List<int> boughtPlotIndices = new List<int>();
 

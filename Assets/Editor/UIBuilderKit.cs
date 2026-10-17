@@ -535,6 +535,7 @@ namespace PlantBreeding.EditorTools
 
             var txt = MakeLabel("Value", pill.transform, value, FontUi, 14, Hex("#EBE4D6"), FontStyles.Bold);
             txt.alignment = TextAlignmentOptions.MidlineLeft;
+            txt.textWrappingMode = TextWrappingModes.NoWrap; // «6683» не переноситься на два рядки
             return txt;
         }
 
@@ -677,12 +678,16 @@ namespace PlantBreeding.EditorTools
             ring.color = Hex("#5C6653");
             ring.raycastTarget = true;
 
-            var face = MakeImage("Face", btnGo.transform, LoadSprite("circle-fill"), Hex("#1C2414"), Image.Type.Simple);
-            Place(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(36, 36));
-
-            var icon = MakeImage("Sprig", btnGo.transform, LoadSprite("sprig"), Hex("#DDE8C8"), Image.Type.Simple);
-            icon.preserveAspect = true;
-            Place(icon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(20, 20));
+            // Обраний аватар під обраною рамкою (ProfileEntryButtonView ставить малюнки в рантаймі).
+            // Кнопці потрібен Image для натискання — прозорий, а рамка — окремим шаром поверх аватара.
+            ring.sprite = null; ring.color = new Color(1, 1, 1, 0.001f);
+            float face = 42 * PlantBreeding.Collections.ProfileArt.AvatarInFrame;
+            var avatar = MakeImage("Avatar", btnGo.transform, null, Color.white, Image.Type.Simple);
+            avatar.preserveAspect = true;
+            Place(avatar.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(face, face));
+            var frame = MakeImage("Frame", btnGo.transform, null, Color.white, Image.Type.Simple);
+            frame.preserveAspect = true;
+            Stretch(frame.rectTransform);
 
             var nav = btnGo.AddComponent<SceneNavButton>();
             nav.action = SceneNavButton.NavAction.OpenAdditive;
@@ -691,7 +696,8 @@ namespace PlantBreeding.EditorTools
             btn.targetGraphic = ring;
 
             var view = btnGo.AddComponent<ProfileEntryButtonView>();
-            view.ringImage = ring;
+            view.ringImage = frame;
+            view.avatarImage = avatar;
 
             var dot = MakeImage("OnlineDot", btnGo.transform, LoadSprite("circle-fill"), ColGreenBr, Image.Type.Simple);
             Place(dot.rectTransform, new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(-1, -1), new Vector2(12, 12));

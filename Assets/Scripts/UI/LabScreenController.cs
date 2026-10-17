@@ -517,8 +517,8 @@ namespace PlantBreeding.UI
             var gm = GameManager.Instance;
             var data = gm != null ? gm.playerData : null;
 
-            if (coinsLabel != null) coinsLabel.text = data != null ? data.coins.ToString("N0") : "0";
-            if (gemsLabel != null) gemsLabel.text = data != null ? data.gems.ToString("N0") : "0";
+            if (coinsLabel != null) coinsLabel.text = data != null ? HeaderView.FormatAmount(data.coins) : "0";
+            if (gemsLabel != null) gemsLabel.text = data != null ? HeaderView.FormatAmount(data.gems) : "0";
 
             if (data == null) return;
 

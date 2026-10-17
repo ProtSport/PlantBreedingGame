@@ -67,6 +67,15 @@ namespace PlantBreeding.UI
         private readonly List<TMP_Text> _streakCellLabels = new List<TMP_Text>();
         private ClaimButton _loginClaim;
         private readonly List<TaskRow> _taskRows = new List<TaskRow>();
+        // Вкладка «Тиждень» (Economy/WeeklyTasks)
+        private bool _weekTab;
+        private ClaimButton _tabDay, _tabWeek;
+        private TMP_Text _modalTitle;
+        private GameObject _loginRowRoot, _chestRowRoot, _weekChestRoot;
+        private readonly List<TaskRow> _weekRows = new List<TaskRow>();
+        private TMP_Text _weekChestLabel;
+        private Image _weekChestIcon;
+        private ClaimButton _weekChestClaim;
         private TMP_Text _chestLabel;
         private ClaimButton _chestClaim;
 
@@ -226,14 +235,17 @@ namespace PlantBreeding.UI
         {
             _modal = MakeModal("TasksModal", CloseModal, out var panel);
 
-            var title = MakeLabel(panel, "Title", "Завдання дня", fontHead, 28, UIColors.Text, FontStyles.Normal);
-            SetHeight(title.gameObject, 32);
+            _modalTitle = MakeLabel(panel, "Title", "Завдання дня", fontHead, 28, UIColors.Text, FontStyles.Normal);
+            SetHeight(_modalTitle.gameObject, 32);
+            BuildTabs(panel);
             _streakLabel = MakeLabel(panel, "Streak", "", fontUi, 11, UIColors.Soft, FontStyles.Normal);
             SetHeight(_streakLabel.gameObject, 14);
 
             BuildLoginRow(panel);
-            for (int i = 0; i < EconomyConfig.DailyTaskCount; i++) BuildTaskRow(panel);
+            for (int i = 0; i < EconomyConfig.DailyTaskCount; i++) BuildTaskRow(panel, _taskRows, idx => EconomyService.ClaimTask(idx));
             BuildChestRow(panel);
+            for (int i = 0; i < EconomyConfig.WeeklyTaskCount; i++) BuildTaskRow(panel, _weekRows, idx => WeeklyTasks.Claim(idx));
+            BuildWeekChestRow(panel);
 
             var close = MakeClaimButton(panel, "Закрити", CloseModal);
             SetHeight(close.button.gameObject, 40);
@@ -243,6 +255,7 @@ namespace PlantBreeding.UI
         private void BuildLoginRow(Transform parent)
         {
             var row = MakeRow(parent, "LoginRow", 112, UIColors.Rgba(UIColors.GoldLt, 0.10f));
+            _loginRowRoot = row.gameObject;
 
             _loginTitle = MakeLabel(row, "Title", "", fontUi, 13, UIColors.GoldLt, FontStyles.Bold);
             Place(_loginTitle.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -10), new Vector2(210, 18));
@@ -267,9 +280,46 @@ namespace PlantBreeding.UI
             Place((RectTransform)_loginClaim.button.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-10, 8), new Vector2(92, 36));
         }
 
-        private void BuildTaskRow(Transform parent)
+        /// <summary>Вкладки «Сьогодні / Тиждень» — дві пігулки під заголовком.</summary>
+        private void BuildTabs(Transform parent)
         {
-            int index = _taskRows.Count;
+            var row = new GameObject("Tabs", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(parent, false);
+            SetHeight(row, 34);
+            var hl = row.GetComponent<HorizontalLayoutGroup>();
+            hl.spacing = 8; hl.childControlWidth = true; hl.childControlHeight = true;
+            hl.childForceExpandWidth = true; hl.childForceExpandHeight = true;
+            _tabDay = MakeClaimButton(row.transform, "Сьогодні", () => { _weekTab = false; RefreshAll(); });
+            _tabWeek = MakeClaimButton(row.transform, "Тиждень", () => { _weekTab = true; RefreshAll(); });
+        }
+
+        private static void StyleTab(ClaimButton tab, bool active, string text)
+        {
+            tab.button.interactable = true;
+            tab.label.text = text;
+            tab.bg.color = active ? UIColors.Rgba(UIColors.Green, 0.9f) : UIColors.Rgba(Color.white, 0.06f);
+            tab.label.color = active ? UIColors.Hex("#10160B") : UIColors.Soft;
+        }
+
+        /// <summary>Скриня тижня: іконка нагороди (аватар/рамка) + опис + «Відкрити».</summary>
+        private void BuildWeekChestRow(Transform parent)
+        {
+            var row = MakeRow(parent, "WeekChestRow", 68, UIColors.Rgba(UIColors.GoldLt, 0.10f));
+            _weekChestRoot = row.gameObject;
+            _weekChestIcon = MakeImage(row, "Reward", null, Color.white, Image.Type.Simple);
+            _weekChestIcon.preserveAspect = true;
+            Place(_weekChestIcon.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(10, 0), new Vector2(48, 48));
+            _weekChestLabel = MakeLabel(row, "Label", "", fontUi, 12, UIColors.Text, FontStyles.Bold);
+            Place(_weekChestLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(66, 0), new Vector2(166, 54));
+            _weekChestLabel.textWrappingMode = TextWrappingModes.Normal;
+            _weekChestLabel.enableAutoSizing = true; _weekChestLabel.fontSizeMin = 9; _weekChestLabel.fontSizeMax = 12;
+            _weekChestClaim = MakeClaimButton(row, "Відкрити", () => WeeklyTasks.ClaimChest());
+            Place((RectTransform)_weekChestClaim.button.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-10, 0), new Vector2(92, 36));
+        }
+
+        private void BuildTaskRow(Transform parent, List<TaskRow> rows, System.Func<int, bool> claim)
+        {
+            int index = rows.Count;
             var row = MakeRow(parent, "Task" + index, 68, UIColors.Rgba(Color.white, 0.05f));
             var h = new TaskRow { root = row.gameObject };
 
@@ -290,15 +340,16 @@ namespace PlantBreeding.UI
             h.progressText = MakeLabel(row, "Progress", "", fontUi, 10, UIColors.Soft, FontStyles.Normal);
             Place(h.progressText.rectTransform, new Vector2(0, 0), new Vector2(0, 0), new Vector2(186, 6), new Vector2(48, 16));
 
-            h.claim = MakeClaimButton(row, "Забрати", () => EconomyService.ClaimTask(index));
+            h.claim = MakeClaimButton(row, "Забрати", () => claim(index));
             Place((RectTransform)h.claim.button.transform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-10, 0), new Vector2(92, 36));
 
-            _taskRows.Add(h);
+            rows.Add(h);
         }
 
         private void BuildChestRow(Transform parent)
         {
             var row = MakeRow(parent, "ChestRow", 56, UIColors.Rgba(UIColors.Blue, 0.08f));
+            _chestRowRoot = row.gameObject;
             _chestLabel = MakeLabel(row, "Label", "", fontUi, 12, UIColors.Text, FontStyles.Bold);
             Place(_chestLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(12, 0), new Vector2(214, 40));
             _chestLabel.textWrappingMode = TextWrappingModes.Normal;
@@ -315,11 +366,24 @@ namespace PlantBreeding.UI
         {
             var gm = GameManager.Instance;
             if (gm != null) EconomyService.RollDay(gm.playerData); // гра могла висіти відкритою через північ
+            // Відкриваємо «Тиждень», лише коли на «Сьогодні» забирати нічого, а на тижні — є.
+            if (gm != null)
+            {
+                int week = WeeklyTasks.ClaimableCount(gm.playerData);
+                _weekTab = week > 0 && EconomyService.ClaimableCount(gm.playerData) == week;
+            }
             _modal.SetActive(true);
             RefreshAll();
         }
 
         internal void CloseModal() => _modal.SetActive(false);
+
+        /// <summary>Вкладка «Тиждень» відкритого вікна завдань (Editor/ScreenAudit).</summary>
+        internal void ShowWeekTab()
+        {
+            _weekTab = true;
+            RefreshAll();
+        }
 
         private void RefreshAll()
         {
@@ -330,6 +394,23 @@ namespace PlantBreeding.UI
             RefreshShop();
 
             if (!_modal.activeSelf) return;
+
+            // ── Вкладки ──
+            int dayClaim = EconomyService.ClaimableCount(data) - WeeklyTasks.ClaimableCount(data);
+            int weekClaim = WeeklyTasks.ClaimableCount(data);
+            StyleTab(_tabDay, !_weekTab, dayClaim > 0 ? $"Сьогодні · {dayClaim}" : "Сьогодні");
+            StyleTab(_tabWeek, _weekTab, weekClaim > 0 ? $"Тиждень · {weekClaim}" : "Тиждень");
+            _modalTitle.text = _weekTab ? "Завдання тижня" : "Завдання дня";
+            _loginRowRoot.SetActive(!_weekTab);
+            _chestRowRoot.SetActive(!_weekTab);
+            _weekChestRoot.SetActive(_weekTab);
+            foreach (var r in _taskRows) r.root.SetActive(false);
+            foreach (var r in _weekRows) r.root.SetActive(false);
+            if (_weekTab)
+            {
+                RefreshWeek(data);
+                return;
+            }
 
             // ── Вхід ──
             bool loginAvailable = EconomyService.IsLoginRewardAvailable(data);
@@ -365,20 +446,7 @@ namespace PlantBreeding.UI
             }
 
             // ── Завдання ──
-            for (int i = 0; i < _taskRows.Count; i++)
-            {
-                var row = _taskRows[i];
-                bool exists = i < data.dailyTasks.Count;
-                row.root.SetActive(exists);
-                if (!exists) continue;
-
-                var t = data.dailyTasks[i];
-                row.desc.text = EconomyService.DescribeTask(t);
-                row.reward.text = $"+{t.rewardCoins} монет · +{t.rewardXp} XP";
-                row.progressText.text = $"{t.progress}/{t.target}";
-                row.fill.anchorMax = new Vector2(t.target > 0 ? Mathf.Clamp01((float)t.progress / t.target) : 0f, 1);
-                SetClaim(row.claim, t.IsComplete && !t.claimed, t.claimed ? "Отримано" : t.IsComplete ? "Забрати" : "В процесі");
-            }
+            FillTaskRows(_taskRows, data.dailyTasks);
 
             // ── Скриня ──
             bool chest = EconomyService.IsChestAvailable(data);
@@ -386,6 +454,41 @@ namespace PlantBreeding.UI
                 ? "Скриню дня відкрито. Нові завдання — завтра!"
                 : $"Скриня дня: виконай усі завдання → +{EconomyConfig.DailyChestCoins(data.level)} монет · +{EconomyConfig.DailyChestXp} XP";
             SetClaim(_chestClaim, chest, data.dailyChestClaimed ? "Відкрито" : "Відкрити");
+        }
+
+        private void RefreshWeek(PlayerData data)
+        {
+            int days = Collections.CollectionService.WeekDaysLeft();
+            _streakLabel.text = $"Ще {days} дн. · нові завдання щопонеділка";
+            FillTaskRows(_weekRows, data.weeklyTasks);
+
+            bool chest = WeeklyTasks.IsChestAvailable(data);
+            var next = WeeklyTasks.NextReward(data);
+            _weekChestIcon.gameObject.SetActive(next != null && !data.weeklyChestClaimed);
+            if (next != null)
+                _weekChestIcon.sprite = next.Value.avatar ? Collections.ProfileArt.Avatar(next.Value.id) : Collections.ProfileArt.Frame(next.Value.id);
+            _weekChestLabel.rectTransform.anchoredPosition = new Vector2(_weekChestIcon.gameObject.activeSelf ? 66 : 12, 0);
+            _weekChestLabel.text = data.weeklyChestClaimed
+                ? "Скриню тижня відкрито. Нові завдання — у понеділок!"
+                : $"Скриня тижня: виконай усі 5 → {WeeklyTasks.DescribeChest(data)}";
+            SetClaim(_weekChestClaim, chest, data.weeklyChestClaimed ? "Відкрито" : "Відкрити");
+        }
+
+        private static void FillTaskRows(List<TaskRow> rows, List<DailyTaskSave> tasks)
+        {
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                bool exists = i < tasks.Count;
+                row.root.SetActive(exists);
+                if (!exists) continue;
+                var t = tasks[i];
+                row.desc.text = EconomyService.DescribeTask(t);
+                row.reward.text = $"+{t.rewardCoins} монет · +{t.rewardXp} XP";
+                row.progressText.text = $"{t.progress}/{t.target}";
+                row.fill.anchorMax = new Vector2(t.target > 0 ? Mathf.Clamp01((float)t.progress / t.target) : 0f, 1);
+                SetClaim(row.claim, t.IsComplete && !t.claimed, t.claimed ? "Отримано" : t.IsComplete ? "Забрати" : "В процесі");
+            }
         }
 
         private static void SetClaim(ClaimButton c, bool active, string text)

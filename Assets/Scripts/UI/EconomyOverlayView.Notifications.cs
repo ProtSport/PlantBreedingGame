@@ -42,6 +42,7 @@ namespace PlantBreeding.UI
             public string plantId, title;
             public int coins = -1;
             public int taskIndex = -1;
+            public bool weekly;
 
             public GameObject root;
             public RectTransform body;
@@ -85,8 +86,8 @@ namespace PlantBreeding.UI
         private void EnqueueSale(string plantId, string title, int coins) =>
             _waiting.Add(new Notice { kind = NoticeKind.Row, plantId = plantId, title = title, coins = coins });
 
-        private void EnqueueTask(int index) =>
-            _waiting.Add(new Notice { kind = NoticeKind.Task, taskIndex = index });
+        private void EnqueueTask(int index, bool weekly) =>
+            _waiting.Add(new Notice { kind = NoticeKind.Task, taskIndex = index, weekly = weekly });
 
         // ── Кадр ──────────────────────────────────────────────────────────
         private void UpdateNotifications()
@@ -160,7 +161,8 @@ namespace PlantBreeding.UI
         private void BuildTaskCard(Notice n)
         {
             var data = Core.GameManager.Instance != null ? Core.GameManager.Instance.playerData : null;
-            var task = data != null && n.taskIndex >= 0 && n.taskIndex < data.dailyTasks.Count ? data.dailyTasks[n.taskIndex] : null;
+            var list = data == null ? null : n.weekly ? data.weeklyTasks : data.dailyTasks;
+            var task = list != null && n.taskIndex >= 0 && n.taskIndex < list.Count ? list[n.taskIndex] : null;
 
             var body = MakeNoticeShell(n, 86);
             var bg = body.gameObject.AddComponent<Image>();
@@ -181,7 +183,7 @@ namespace PlantBreeding.UI
             scroll.preserveAspect = true;
             Place(scroll.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(26, 26));
 
-            var title = MakeLabel(body, "Title", "Завдання виконано", fontHead, 18, UIColors.Hex("#F2ECDF"), FontStyles.Normal);
+            var title = MakeLabel(body, "Title", n.weekly ? "Завдання тижня виконано" : "Завдання виконано", fontHead, 18, UIColors.Hex("#F2ECDF"), FontStyles.Normal);
             Anchor(title.rectTransform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(68, -34), new Vector2(-110, -12));
             title.enableAutoSizing = true; title.fontSizeMin = 13; title.fontSizeMax = 18;
 
@@ -193,7 +195,8 @@ namespace PlantBreeding.UI
             var claim = MakeClaimButton(body, "Забрати", () =>
             {
                 int coins = task != null ? task.rewardCoins : 0;
-                if (EconomyService.ClaimTask(n.taskIndex) && coins > 0) EnqueueSale(null, "Нагорода за завдання", coins);
+                bool ok = n.weekly ? WeeklyTasks.Claim(n.taskIndex) : EconomyService.ClaimTask(n.taskIndex);
+                if (ok && coins > 0) EnqueueSale(null, "Нагорода за завдання", coins);
                 Dismiss(n);
             });
             Place((RectTransform)claim.button.transform, new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-12, -34), new Vector2(92, 36));

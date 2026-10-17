@@ -449,8 +449,8 @@ namespace PlantBreeding.UI
         {
             if (GameManager.Instance != null)
             {
-                if (coinsLabel != null) coinsLabel.text = GameManager.Instance.playerData.coins.ToString("N0");
-                if (gemsLabel != null) gemsLabel.text = GameManager.Instance.playerData.gems.ToString("N0");
+                if (coinsLabel != null) coinsLabel.text = HeaderView.FormatAmount(GameManager.Instance.playerData.coins);
+                if (gemsLabel != null) gemsLabel.text = HeaderView.FormatAmount(GameManager.Instance.playerData.gems);
             }
 
             bool hasPlant = _selectedPlant != null;

@@ -18,7 +18,12 @@ namespace PlantBreeding.Economy
         Water,
         EarnCoins,
         PlantSpecies,
-        Cure
+        Cure,
+        // Лише «Завдання тижня» (Economy/WeeklyTasks):
+        DistinctSpecies, // посадити N різних видів
+        Care,            // полити або дати сонця N разів
+        LoginDays,       // заходити в гру N днів
+        Sun              // подія «дали сонця» — рахується в Care
     }
 
     /// <summary>
@@ -47,6 +52,7 @@ namespace PlantBreeding.Economy
         public static bool RollDay(PlayerData data)
         {
             string today = Today;
+            WeeklyTasks.Ensure(data); // новий тиждень / сьогоднішній вхід у «Заходити N днів»
             if (data.lastLoginDay == today)
             {
                 if (data.dailyTasksDay != today) GenerateDailyTasks(data, today);
@@ -402,6 +408,7 @@ namespace PlantBreeding.Economy
                 if (task.IsComplete) GameEvents.RaiseTaskCompleted(i); // картка «Завдання виконано · Забрати»
             }
             if (changed) GameEvents.RaiseDailyStateChanged();
+            WeeklyTasks.Track(gm.playerData, kind, amount, plantId);
         }
 
         public static bool ClaimTask(int index)
@@ -444,7 +451,7 @@ namespace PlantBreeding.Economy
             int n = data.dailyTasks.Count(t => t.IsComplete && !t.claimed);
             if (IsChestAvailable(data)) n++;
             if (IsLoginRewardAvailable(data)) n++;
-            return n;
+            return n + WeeklyTasks.ClaimableCount(data);
         }
 
         public static string DescribeTask(DailyTaskSave t) => t.kind switch
@@ -455,6 +462,9 @@ namespace PlantBreeding.Economy
             DailyTaskKind.EarnCoins => $"Заробити {t.target} монет на продажу",
             DailyTaskKind.PlantSpecies => $"Посадити «{PlantName(t.plantId)}» ×{t.target}",
             DailyTaskKind.Cure => t.target == 1 ? "Вилікувати рослину" : $"Вилікувати {t.target} рослини",
+            DailyTaskKind.DistinctSpecies => $"Посадити {t.target} різних видів",
+            DailyTaskKind.Care => $"Доглянути {t.target} разів: полив або сонце",
+            DailyTaskKind.LoginDays => $"Заходити в гру {t.target} дні",
             _ => "Завдання"
         };
 

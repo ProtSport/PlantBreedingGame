@@ -273,6 +273,9 @@ namespace PlantBreeding.Collections
 
         public static int WeekRewardCoins(int level) => 150 + 15 * Mathf.Max(1, level);
 
+        /// <summary>Поточний ISO-тиждень («2026-W42») — і для колекції тижня, і для «Завдань тижня».</summary>
+        public static string CurrentWeekKey => WeekKeyNow;
+
         private static string WeekKeyNow
         {
             get

@@ -59,14 +59,27 @@ namespace PlantBreeding.UI
             if (gm == null) return;
             var data = gm.playerData;
 
-            if (coinsLabel != null) coinsLabel.text = data.coins.ToString();
-            if (gemsLabel != null) gemsLabel.text = data.gems.ToString();
+            if (coinsLabel != null) coinsLabel.text = FormatAmount(data.coins);
+            if (gemsLabel != null) gemsLabel.text = FormatAmount(data.gems);
             if (levelLabel != null)
                 levelLabel.text = $"РІВЕНЬ {data.level} · {data.xp}/{EconomyService.XpForNextLevel(data.level)} XP";
 
             int claimable = EconomyService.ClaimableCount(data);
             if (tasksBadge != null) tasksBadge.SetActive(claimable > 0);
             if (tasksBadgeLabel != null) tasksBadgeLabel.text = claimable.ToString();
+        }
+
+        /// <summary>
+        /// Сума для пілюлі в шапці: до 9 999 — як є, далі коротко (12.3K, 250K, 1.2M), щоб рядок
+        /// шапки з «назад» вміщався в 350 px і число не переносилось.
+        /// </summary>
+        public static string FormatAmount(int n)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            if (n < 10000) return n.ToString(inv);
+            if (n < 100000) return (n / 1000f).ToString("0.#", inv) + "K";
+            if (n < 1000000) return (n / 1000).ToString(inv) + "K";
+            return (n / 1000000f).ToString("0.#", inv) + "M";
         }
     }
 }

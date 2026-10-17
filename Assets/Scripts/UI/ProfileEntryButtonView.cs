@@ -1,37 +1,38 @@
 using UnityEngine;
 using UnityEngine.UI;
+using PlantBreeding.Collections;
 using PlantBreeding.Core;
 
 namespace PlantBreeding.UI
 {
     /// <summary>
-    /// Кільце круглої кнопки-аватара на «Моєму саду» (точка входу в «Профіль»,
-    /// ТЗ «Персонаж») — тонується кольором поточного рівня престижу.
-    /// Той самий патерн, що HeaderView: підписка на GameEvents, Redraw() у Start().
+    /// Кругла кнопка-аватар у шапці (точка входу в «Профіль»): обраний аватар у
+    /// обраній рамці (ProfileArt). Оновлюється при поверненні з Профілю.
     /// </summary>
     public class ProfileEntryButtonView : MonoBehaviour
     {
-        public Image ringImage;
+        public Image ringImage;    // рамка (поверх)
+        public Image avatarImage;  // аватар (під рамкою)
 
-        private void OnEnable() => GameEvents.OnLevelUp += HandleLevelUp;
-        private void OnDisable() => GameEvents.OnLevelUp -= HandleLevelUp;
+        private string _shownAvatar, _shownFrame;
 
         private void Start() => Redraw();
 
-        private void HandleLevelUp(int newLevel) => Redraw();
+        private void Update()
+        {
+            // Аватар/рамку міняють у Профілі (інша сцена) — дешева перевірка без подій.
+            var data = GameManager.Instance != null ? GameManager.Instance.playerData : null;
+            if (data != null && (data.activeAvatarId != _shownAvatar || data.activeFrameId != _shownFrame)) Redraw();
+        }
 
         private void Redraw()
         {
-            if (GameManager.Instance == null || ringImage == null) return;
-            ringImage.color = TierColor(GameManager.Instance.GetPrestigeTier());
+            var data = GameManager.Instance != null ? GameManager.Instance.playerData : null;
+            if (data == null) return;
+            _shownAvatar = data.activeAvatarId;
+            _shownFrame = data.activeFrameId;
+            if (ringImage != null) { ringImage.sprite = ProfileArt.Frame(_shownFrame); ringImage.color = Color.white; ringImage.preserveAspect = true; }
+            if (avatarImage != null) { avatarImage.sprite = ProfileArt.Avatar(_shownAvatar); avatarImage.color = Color.white; }
         }
-
-        private static Color TierColor(string tier) => tier switch
-        {
-            "spark" => UIColors.Hex("#E4C77E"),
-            "gold" => UIColors.Hex("#E4C77E"),
-            "green" => UIColors.Green,
-            _ => UIColors.Hex("#5C6653"),
-        };
     }
 }
